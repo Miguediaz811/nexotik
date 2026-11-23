@@ -98,7 +98,11 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px
 .chip-fl span{color:#1fa64a}
 .base{height:14px;background:linear-gradient(#d9dee8,#8f98ab);border-radius:2px 2px 14px 14px;position:relative}
 .base::before{content:"";position:absolute;left:50%;top:0;width:16%;height:5px;transform:translateX(-50%);background:#b4bccb;border-radius:0 0 8px 8px}
-@media (max-width:860px){.hero .wrap{grid-template-columns:1fr}.laptop{justify-self:center}.hero{padding-bottom:120px}}
+.iso{position:relative;justify-self:center;width:min(300px,70%);aspect-ratio:1;transform:translateY(calc(var(--p,0) * 90px)) scale(calc(1 - var(--p,0) * .15));animation:rise 1.1s .25s cubic-bezier(.2,.8,.2,1) both}
+.iso img{position:relative;display:block;width:100%;height:auto;border-radius:22%;box-shadow:0 40px 80px -30px rgba(31,123,255,.75),0 0 0 1px rgba(79,179,255,.25);animation:bob 6s ease-in-out infinite}
+.iso-ring{position:absolute;inset:-14%;border-radius:50%;border:1.5px dashed rgba(79,179,255,.35);animation:spin 40s linear infinite}
+.iso-ring.r2{inset:-28%;border:1px solid rgba(79,179,255,.15);border-top-color:rgba(79,179,255,.6);animation-duration:14s}
+@media (max-width:860px){.hero .wrap{grid-template-columns:1fr}.laptop{justify-self:center}.hero{padding-bottom:120px}.iso{display:none}}
 
 /* cifras */
 .stats{position:relative;z-index:3;margin-top:-62px;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(10,21,48,.92);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:18px;color:#e9efff;box-shadow:0 30px 60px -30px rgba(6,13,31,.7)}
@@ -275,6 +279,10 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
       <h1>Tu computador. <em>Como nuevo.</em> Hecho a tu medida.</h1>
       <p class="sub">Mantenimiento, Windows y Office, virus, respaldo de información, cámaras WiFi y páginas web. Soluciones rápidas, efectivas y con garantía.</p>
       <a class="btn btn-solid" href="#servicios">Ver servicios <svg class="arr"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="iso" aria-hidden="true">
+      <div class="iso-ring"></div><div class="iso-ring r2"></div>
+      <img src="img/nexotech-icono.svg" alt="" width="300" height="300">
     </div>
   </div>
 </header>
