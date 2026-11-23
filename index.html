@@ -393,6 +393,24 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const WA='https://wa.me/573218757723';
 const clamp=v=>Math.max(0,Math.min(1,v));
 
+/* desplazamiento suave al tocar un enlace interno */
+document.documentElement.style.scrollBehavior='auto';
+let anim=0;
+function glide(y){
+  cancelAnimationFrame(anim);
+  const y0=scrollY,d=y-y0,dur=Math.min(1400,Math.max(600,Math.abs(d)*.45)),t0=performance.now();
+  const ease=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+  (function step(t){const k=Math.min(1,(t-t0)/dur);scrollTo(0,y0+d*ease(k));if(k<1)anim=requestAnimationFrame(step)})(t0);
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#"]');if(!a)return;
+  const id=a.getAttribute('href');const el=id==='#'?document.body:document.querySelector(id);if(!el)return;
+  e.preventDefault();
+  glide(id==='#inicio'?0:el.getBoundingClientRect().top+scrollY);
+  history.replaceState(null,'',id);
+});
+['wheel','touchstart','keydown'].forEach(ev=>addEventListener(ev,()=>cancelAnimationFrame(anim),{passive:true}));
+
 const S=[
  {id:'prev',t:'Mantenimiento preventivo',s:'Limpieza y revisión para que no se dañe.',d:['Limpieza interna de polvo y ventiladores','Cambio de pasta térmica','Revisión de disco, memoria y temperatura','Alarga la vida de tu equipo']},
  {id:'corr',t:'Mantenimiento correctivo',s:'Reparamos lo que ya falló.',d:['Equipos que no encienden o se reinician','Cambio de disco, memoria, pantalla o teclado','Portátiles y computadores de mesa','Diagnóstico antes de cualquier cambio']},
