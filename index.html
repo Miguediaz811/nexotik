@@ -19,11 +19,14 @@
   --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scrollbar-color:var(--blue) var(--navy)}
-::-webkit-scrollbar{width:12px;height:12px}
+html{scroll-behavior:smooth}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
 ::-webkit-scrollbar-track{background:var(--navy)}
-::-webkit-scrollbar-thumb{background:var(--blue);border-radius:10px;border:3px solid var(--navy)}
+::-webkit-scrollbar-thumb{background:var(--blue);border-radius:10px;border:2px solid var(--navy)}
 ::-webkit-scrollbar-thumb:hover{background:var(--blue-2)}
+::-webkit-scrollbar-corner{background:var(--navy)}
+@supports not selector(::-webkit-scrollbar){html{scrollbar-color:var(--blue) var(--navy);scrollbar-width:thin}}
 html,body{margin:0;padding:0}
 img{max-width:100%}
 [hidden]{display:none!important}
