@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Nexotik · Órdenes de servicio</title>
+<link rel="icon" type="image/svg+xml" href="img/nexotik-icono.svg">
+<meta name="theme-color" content="#060d1f">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: barra lateral azul noche con el menú; área de trabajo en azul claro con tarjetas; la hoja de orden imprimible solo aparece al imprimir. */
+:root{
+  --navy:#060d1f; --navy-2:#0e1b3a; --line-d:#1f3466;
+  --blue:#1f7bff; --blue-2:#4fb3ff; --wa:#25d366;
+  --bg:#dde9fb; --card:#f4f8ff; --card-2:#e8f0fd; --ink:#0b1733; --muted:#4b5e82; --hair:#bcd0ee;
+  --ok:#16a34a; --warn:#d97706; --bad:#dc2626; --violet:#7c3aed;
+  --display:"Outfit","Segoe UI",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-button{display:none}
+::-webkit-scrollbar-track{background:var(--navy)}::-webkit-scrollbar-thumb{background:var(--blue);border-radius:10px;border:2px solid var(--navy)}
+h1,h2,h3{font-family:var(--display);font-weight:500;margin:0;letter-spacing:-.01em}
+.num{font-variant-numeric:tabular-nums}
+
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100%}
+aside{background:var(--navy);color:#e9efff;padding:22px 16px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+aside .logo img{display:block;width:100%;max-width:200px;height:auto}
+.menu{display:flex;flex-direction:column;gap:4px}
+.menu a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;text-decoration:none;color:#c9d5f2;font-weight:500;transition:background .2s,color .2s}
+.menu a svg{width:18px;height:18px;flex:none}
+.menu a:hover{background:var(--navy-2);color:#fff}
+.menu a.on{background:var(--blue);color:#fff}
+.side-foot{margin-top:auto;font-size:.78rem;color:#93a4cc}
+.side-foot b{color:#e9efff;font-weight:500}
+main{min-width:0;padding:26px max(16px,3vw) 60px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.top h1{font-size:1.8rem}
+.top p{margin:2px 0 0;color:var(--muted)}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  aside{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;padding:10px 12px;z-index:20;gap:10px;overflow-x:auto}
+  aside .logo img{width:120px}
+  .menu{flex-direction:row}
+  .menu a{padding:8px 10px;white-space:nowrap}
+  .menu a span{display:none}
+  .side-foot{display:none}
+}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:8px;padding:9px 16px;font:500 .9rem var(--body);cursor:pointer;text-decoration:none;transition:background .2s,border-color .2s,transform .15s;background:var(--card);color:var(--ink);border-color:var(--hair)}
+.btn:hover{border-color:var(--blue)}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:16px;height:16px}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-p:hover{background:#1569e0}
+.btn-wa{background:var(--wa);color:#04210f;border-color:var(--wa)}
+.btn-d{color:var(--bad);border-color:#f3b4b4;background:#fff5f5}
+.btn-d:hover{border-color:var(--bad)}
+.btn-sm{padding:6px 10px;font-size:.82rem}
+.btn-i{padding:7px;border-radius:7px}
+
+.card{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:20px}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+@media (max-width:1100px){.kpis{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.kpis{grid-template-columns:1fr}}
+.kpi{position:relative;overflow:hidden}
+.kpi small{display:block;color:var(--muted);font-weight:500}
+.kpi b{display:block;font-family:var(--display);font-weight:500;font-size:1.9rem;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.8rem;color:var(--muted)}
+.kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,var(--blue))}
+.two{grid-template-columns:1.4fr 1fr}
+@media (max-width:1000px){.two{grid-template-columns:1fr}}
+.sec-t{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.sec-t h2{font-size:1.15rem}
+
+/* tabla */
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--hair);background:var(--card)}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--hair);vertical-align:middle}
+th{font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;background:var(--card-2)}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer;transition:background .15s}
+tbody tr:hover{background:#e3edfc}
+td.r,th.r{text-align:right}
+.cli b{display:block;font-weight:600}
+.cli span{color:var(--muted);font-size:.82rem}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:600;white-space:nowrap;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.saldo-pend{color:var(--bad);font-weight:600}
+.saldo-ok{color:var(--ok);font-weight:600}
+
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+input,select,textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--hair);border-radius:8px;padding:9px 11px;width:100%;min-width:0}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(31,123,255,.15)}
+textarea{min-height:76px;resize:vertical}
+.filters input{flex:1 1 240px;width:auto}
+.filters select{flex:0 1 200px;width:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--hair);background:var(--card);border-radius:99px;padding:5px 12px;font:500 .82rem var(--body);cursor:pointer;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* formulario */
+.form{display:grid;gap:16px}
+.fs{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:18px 20px}
+.fs h3{font-size:1rem;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fs h3 i{font-style:normal;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:.75rem;font-family:var(--body);font-weight:600}
+.row{display:grid;gap:12px;grid-template-columns:repeat(var(--cols,3),1fr)}
+@media (max-width:760px){.row{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:.82rem;font-weight:500;color:var(--muted);min-width:0}
+label.f.req>span::after{content:" *";color:var(--bad)}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.checks label{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--hair);border-radius:8px;padding:6px 10px;font-size:.85rem;cursor:pointer}
+.checks input{width:auto}
+.lines{display:grid;gap:8px}
+.line{display:grid;grid-template-columns:130px 1.3fr 1.5fr 140px 36px;gap:8px;align-items:center}
+.line.pay{grid-template-columns:150px 140px 1fr 1.2fr 36px}
+@media (max-width:860px){.line,.line.pay{grid-template-columns:1fr 1fr;padding:10px;border:1px dashed var(--hair);border-radius:10px}.line .x{justify-self:end}}
+.totals{display:grid;gap:6px;justify-items:end;margin-top:14px;font-size:.95rem}
+.totals div{display:flex;gap:22px;min-width:260px;justify-content:space-between}
+.totals .big{font-family:var(--display);font-size:1.35rem;font-weight:500}
+.status-pick{display:flex;flex-wrap:wrap;gap:8px}
+.status-pick button{border:1.5px solid var(--hair);background:#fff;border-radius:99px;padding:6px 14px;font:600 .82rem var(--body);cursor:pointer;color:var(--muted)}
+.status-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c)}
+.form-bar{position:sticky;bottom:0;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding:14px 0;background:linear-gradient(transparent,var(--bg) 30%)}
+.err{color:var(--bad);font-size:.8rem;min-height:1em}
+
+/* vacío */
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty>svg{width:54px;height:54px;color:var(--blue);margin-bottom:10px}
+.empty h3{color:var(--ink);font-size:1.2rem;margin-bottom:6px}
+.empty .acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+
+/* barras */
+.bars{display:flex;align-items:flex-end;gap:12px;height:190px;padding-top:10px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0}
+.bar i{display:block;width:100%;max-width:46px;border-radius:6px 6px 2px 2px;background:var(--blue);transition:height .6s cubic-bezier(.2,.8,.2,1)}
+.bar i.g{background:#f59e0b}
+.bar .pair{display:flex;gap:4px;align-items:flex-end;width:100%;justify-content:center;height:150px}
+.bar .pair i{max-width:22px}
+.bar small{color:var(--muted);font-size:.75rem;white-space:nowrap}
+.bar b{font-size:.72rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);margin-right:6px;vertical-align:-1px}
+.list{display:grid;gap:8px}
+.li{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid var(--hair);cursor:pointer}
+.li:hover{border-color:var(--blue)}
+.li small{color:var(--muted);display:block}
+.meter{height:8px;border-radius:5px;background:var(--card-2);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--blue);border-radius:5px}
+
+/* diálogo */
+dialog{border:0;border-radius:14px;padding:0;width:min(440px,calc(100vw - 32px));background:var(--card);color:var(--ink);box-shadow:0 30px 70px rgba(6,13,31,.45)}
+dialog::backdrop{background:rgba(6,13,31,.55)}
+dialog .in{padding:22px}
+dialog h3{font-size:1.15rem;margin-bottom:8px}
+dialog p{margin:0 0 18px;color:var(--muted)}
+dialog .acts{display:flex;gap:10px;justify-content:flex-end}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,calc(100% + 40px));visibility:hidden;background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;font-weight:500;transition:transform .35s cubic-bezier(.2,.9,.25,1),visibility 0s .35s;z-index:80;pointer-events:none}
+.toast.show{transform:translate(-50%,0);visibility:visible;transition:transform .35s cubic-bezier(.2,.9,.25,1)}
+.note{font-size:.82rem;color:var(--muted);background:var(--card-2);border-radius:10px;padding:10px 12px}
+
+/* hoja imprimible */
+#print{display:none}
+@media print{
+  @page{size:letter;margin:12mm}
+  body{background:#fff}
+  .app,dialog,.toast{display:none!important}
+  #print{display:block;color:#0b1733;font:11pt/1.45 var(--body)}
+}
+.p-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid #1f7bff;padding-bottom:10px;margin-bottom:12px}
+.p-head img{height:64px}
+.p-head .meta{text-align:right;font-size:9.5pt}
+.p-head .meta b{display:block;font-family:var(--display);font-size:17pt;color:#1f7bff}
+.p-box{border:1px solid #bcd0ee;border-radius:6px;padding:8px 10px;margin-bottom:10px}
+.p-box h4{margin:0 0 6px;font-size:9pt;text-transform:uppercase;letter-spacing:.08em;color:#1f7bff}
+.p-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;font-size:10pt}
+.p-grid span{color:#4b5e82}
+.p-tbl{width:100%;border-collapse:collapse;font-size:10pt;min-width:0}
+.p-tbl th,.p-tbl td{border-bottom:1px solid #d5e2f5;padding:5px 6px;background:none;color:#0b1733}
+.p-tbl th{font-size:8.5pt}
+.p-tot{display:grid;justify-content:end;gap:2px;margin-top:6px;font-size:10.5pt}
+.p-tot div{display:flex;justify-content:space-between;gap:30px}
+.p-cond{font-size:8.5pt;color:#4b5e82;white-space:pre-line}
+.p-sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:34px;font-size:9pt;text-align:center}
+.p-sign div{border-top:1px solid #0b1733;padding-top:4px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+<symbol id="i-print" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></symbol>
+<symbol id="i-wa" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.1c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1-.4-.1-1-.3-1.7-.6-3-1.3-5-4.3-5.1-4.5-.2-.2-1.2-1.6-1.2-3.1s.8-2.2 1-2.5c.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.1.1.7-.1 1.4z"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 15V3M7 8l5-5 5 5M4 20h16"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l13-4v4M16 13h.01"/></symbol>
+</defs></svg>
+
+<div class="app">
+  <aside>
+    <a class="logo" href="#panel"><img src="img/nexotik-logo.svg?v=2" alt="Nexotik" width="200" height="53"></a>
+    <nav class="menu">
+      <a href="#panel" data-v="panel"><svg><use href="#i-home"/></svg><span>Panel</span></a>
+      <a href="#ordenes" data-v="ordenes"><svg><use href="#i-list"/></svg><span>Órdenes</span></a>
+      <a href="#nueva" data-v="nueva"><svg><use href="#i-plus"/></svg><span>Nueva orden</span></a>
+      <a href="#cuentas" data-v="cuentas"><svg><use href="#i-chart"/></svg><span>Cuentas</span></a>
+      <a href="#ajustes" data-v="ajustes"><svg><use href="#i-gear"/></svg><span>Ajustes y copias</span></a>
+    </nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+  <main id="view"></main>
+</div>
+
+<div id="print"></div>
+<dialog id="dlg"><div class="in"><h3 id="dlgT"></h3><p id="dlgP"></p><div class="acts"><button class="btn" id="dlgNo" type="button">Cancelar</button><button class="btn btn-d" id="dlgYes" type="button">Confirmar</button></div></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="fileIn" accept="application/json,.json" hidden>
+
+<script>
+(function(){
+/* ---------- datos ---------- */
+const KEY='nexotik-ordenes-v1';
+const SERVICIOS=['Mantenimiento preventivo','Mantenimiento correctivo','Instalación de Windows','Instalación de Office','Eliminación de virus','Optimización del rendimiento','Instalación de programas y controladores','Respaldo y recuperación de información','Instalación de cámaras WiFi','Desarrollo web','Repuesto','Otro'];
+const ESTADOS={recibido:{t:'Recibido',c:'#1f7bff'},diagnostico:{t:'En diagnóstico',c:'#7c3aed'},reparacion:{t:'En reparación',c:'#d97706'},listo:{t:'Listo para entregar',c:'#0891b2'},entregado:{t:'Entregado',c:'#16a34a'},cancelado:{t:'Cancelado',c:'#6b7280'}};
+const ACCESORIOS=['Cargador','Batería','Cable de poder','Mouse','Teclado','Bolso o estuche','Memoria USB','Disco externo'];
+const TIPOS=['Portátil','Computador de mesa','Todo en uno','Monitor','Impresora','Cámara WiFi','Celular o tablet','Otro'];
+const METODOS=['Efectivo','Nequi','Daviplata','Transferencia','Tarjeta','Otro'];
+const GASTO_CAT=['Repuestos','Herramientas','Transporte','Publicidad','Servicios (internet, luz)','Otro'];
+const defaults=()=>({orders:[],expenses:[],settings:{negocio:'Nexotik',telefono:'321 875 7723',direccion:'',nit:'',correo:'',prefijo:'NX',siguiente:1,garantia:30,condiciones:'1. La garantía cubre únicamente el trabajo realizado y es de {garantia} días a partir de la entrega.\n2. Los equipos que no se reclamen en 30 días después de avisar que están listos pueden generar costo de bodegaje.\n3. Nexotik no se hace responsable por información no respaldada por el cliente antes de la entrega del equipo.\n4. Para retirar el equipo es necesario presentar esta orden.'},lastBackup:null});
+let db;
+function load(){try{const r=localStorage.getItem(KEY);db=r?Object.assign(defaults(),JSON.parse(r)):defaults();db.settings=Object.assign(defaults().settings,db.settings)}catch(e){db=defaults()}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){toast('No se pudo guardar en este navegador');return false}}
+load();
+
+/* ---------- utilidades ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(Math.round(n||0));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fdate=s=>{if(!s)return '—';const [y,m,d]=s.split('-');return `${d}/${m}/${y}`};
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const ym=s=>(s||'').slice(0,7);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const total=o=>o.items.reduce((a,i)=>a+(+i.valor||0),0);
+const pagado=o=>o.pagos.reduce((a,p)=>a+(+p.valor||0),0);
+const saldo=o=>o.estado==='cancelado'?0:total(o)-pagado(o);
+const pill=e=>`<span class="pill" style="--c:${ESTADOS[e]?.c||'#6b7280'}">${ESTADOS[e]?.t||e}</span>`;
+const waNum=t=>{let d=String(t||'').replace(/\D/g,'');if(d.length===10)d='57'+d;return d};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2400)}
+function confirmar(t,p,yes='Confirmar'){return new Promise(r=>{const d=$('#dlg');$('#dlgT').textContent=t;$('#dlgP').textContent=p;$('#dlgYes').textContent=yes;
+  const done=v=>{d.close();$('#dlgYes').onclick=$('#dlgNo').onclick=null;r(v)};$('#dlgYes').onclick=()=>done(true);$('#dlgNo').onclick=()=>done(false);d.oncancel=()=>done(false);d.showModal()})}
+function download(name,text,type){const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
+/* ---------- navegación ---------- */
+let editing=null;
+function route(){
+  const h=(location.hash||'#panel').slice(1);const [v,id]=h.split('-');
+  document.querySelectorAll('.menu a').forEach(a=>a.classList.toggle('on',a.dataset.v===(v==='orden'?'ordenes':v)));
+  window.scrollTo(0,0);
+  if(v==='ordenes')return vOrdenes();
+  if(v==='nueva')return vForm(null);
+  if(v==='orden')return vForm(db.orders.find(o=>o.id===id)||null);
+  if(v==='cuentas')return vCuentas();
+  if(v==='ajustes')return vAjustes();
+  vPanel();
+}
+addEventListener('hashchange',route);
+function sideFoot(){const lb=db.lastBackup;$('#sideFoot').innerHTML=`Datos guardados en este navegador.<br>Última copia: <b>${lb?fdate(lb.slice(0,10)):'nunca'}</b>`}
+
+/* ---------- panel ---------- */
+function vPanel(){
+  const m=ym(today());const abiertas=db.orders.filter(o=>!['entregado','cancelado'].includes(o.estado));
+  const listas=db.orders.filter(o=>o.estado==='listo');
+  const ingMes=db.orders.flatMap(o=>o.pagos).filter(p=>ym(p.fecha)===m).reduce((a,p)=>a+(+p.valor||0),0);
+  const gasMes=db.expenses.filter(g=>ym(g.fecha)===m).reduce((a,g)=>a+(+g.valor||0),0);
+  const porCobrar=db.orders.reduce((a,o)=>a+Math.max(0,saldo(o)),0);
+  const [y,mm]=m.split('-');
+  $('#view').innerHTML=`
+  <div class="top"><div><h1>Panel</h1><p>Resumen de ${MES[+mm-1]} ${y}</p></div><a class="btn btn-p" href="#nueva"><svg><use href="#i-plus"/></svg>Nueva orden</a></div>
+  ${db.orders.length?'':emptyBox()}
+  <div class="grid kpis">
+    <div class="card kpi" style="--c:#1f7bff"><small>Órdenes abiertas</small><b>${abiertas.length}</b><span>${listas.length} listas para entregar</span></div>
+    <div class="card kpi" style="--c:#16a34a"><small>Ingresos del mes</small><b>${money(ingMes)}</b><span>Pagos y abonos recibidos</span></div>
+    <div class="card kpi" style="--c:#f59e0b"><small>Gastos del mes</small><b>${money(gasMes)}</b><span>Ganancia: ${money(ingMes-gasMes)}</span></div>
+    <div class="card kpi" style="--c:#dc2626"><small>Por cobrar</small><b>${money(porCobrar)}</b><span>Saldos pendientes</span></div>
+  </div>
+  <div class="grid two" style="margin-top:16px">
+    <div class="card"><div class="sec-t"><h2>Trabajo pendiente</h2><a class="btn btn-sm" href="#ordenes">Ver todas</a></div>
+      <div class="list">${abiertas.length?abiertas.sort((a,b)=>(a.entrega||'9').localeCompare(b.entrega||'9')).slice(0,7).map(o=>`
+        <div class="li" data-open="${o.id}"><div><b>${esc(o.num)} · ${esc(o.cliente.nombre)}</b><small>${esc(o.equipo.tipo)} ${esc(o.equipo.marca)} · Entrega: ${fdate(o.entrega)}</small></div><div>${pill(o.estado)}</div></div>`).join(''):'<p class="note">No hay órdenes abiertas.</p>'}</div></div>
+    <div class="card"><div class="sec-t"><h2>Estados</h2></div>
+      ${Object.entries(ESTADOS).map(([k,e])=>{const n=db.orders.filter(o=>o.estado===k).length;const pct=db.orders.length?n/db.orders.length*100:0;return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between">${pill(k)}<b class="num">${n}</b></div><div class="meter"><i style="width:${pct}%;background:${e.c}"></i></div></div>`}).join('')}
+    </div>
+  </div>`;
+}
+function emptyBox(){return `<div class="card empty" style="margin-bottom:16px"><svg><use href="#i-box"/></svg><h3>Todavía no hay órdenes</h3><p>Crea tu primera orden de servicio cuando recibas un equipo. Todo se guarda en este navegador.</p>
+  <div class="acts"><a class="btn btn-p" href="#nueva"><svg><use href="#i-plus"/></svg>Crear la primera orden</a><button class="btn" data-act="demo" type="button">Ver con datos de ejemplo</button><button class="btn" data-act="import" type="button"><svg><use href="#i-up"/></svg>Restaurar una copia</button></div></div>`}
+
+/* ---------- lista ---------- */
+let fEstado='abiertas',fTexto='';
+function vOrdenes(){
+  $('#view').innerHTML=`
+  <div class="top"><div><h1>Órdenes de servicio</h1><p>${db.orders.length} órdenes en total</p></div><a class="btn btn-p" href="#nueva"><svg><use href="#i-plus"/></svg>Nueva orden</a></div>
+  ${db.orders.length?'':emptyBox()}
+  <div class="filters"><input id="q" type="search" placeholder="Buscar por cliente, teléfono, número, equipo o serial" value="${esc(fTexto)}">
+  <div class="chips" id="fe">${[['abiertas','Abiertas'],['todas','Todas'],...Object.entries(ESTADOS).map(([k,e])=>[k,e.t])].map(([k,t])=>`<button class="chip" type="button" data-f="${k}" aria-pressed="${fEstado===k}">${t}</button>`).join('')}</div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>N.º</th><th>Recibido</th><th>Cliente</th><th>Equipo</th><th>Estado</th><th class="r">Total</th><th class="r">Saldo</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>`;
+  const draw=()=>{
+    const q=fTexto.toLowerCase().trim();
+    const rows=db.orders.filter(o=>fEstado==='todas'||(fEstado==='abiertas'?!['entregado','cancelado'].includes(o.estado):o.estado===fEstado))
+      .filter(o=>!q||[o.num,o.cliente.nombre,o.cliente.telefono,o.equipo.tipo,o.equipo.marca,o.equipo.modelo,o.equipo.serial,o.falla].join(' ').toLowerCase().includes(q))
+      .sort((a,b)=>b.creado.localeCompare(a.creado));
+    $('#tb').innerHTML=rows.length?rows.map(o=>{const s=saldo(o);return `<tr data-open="${o.id}"><td class="num"><b>${esc(o.num)}</b></td><td class="num">${fdate(o.recibido)}</td>
+      <td class="cli"><b>${esc(o.cliente.nombre)}</b><span>${esc(o.cliente.telefono)}</span></td><td>${esc(o.equipo.tipo)}<br><span style="color:var(--muted);font-size:.82rem">${esc([o.equipo.marca,o.equipo.modelo].filter(Boolean).join(' '))}</span></td>
+      <td>${pill(o.estado)}</td><td class="r num">${money(total(o))}</td><td class="r num ${s>0?'saldo-pend':'saldo-ok'}">${s>0?money(s):'Pagado'}</td>
+      <td class="r"><button class="btn btn-i btn-sm" type="button" data-print="${o.id}" title="Imprimir orden" aria-label="Imprimir orden ${esc(o.num)}"><svg><use href="#i-print"/></svg></button></td></tr>`}).join('')
+      :`<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px;cursor:default">No hay órdenes con ese filtro.</td></tr>`;
+  };
+  draw();
+  $('#q').oninput=e=>{fTexto=e.target.value;draw()};
+  $('#fe').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;fEstado=b.dataset.f;document.querySelectorAll('#fe .chip').forEach(c=>c.setAttribute('aria-pressed',c===b));draw()};
+}
+
+/* ---------- formulario ---------- */
+function blank(){return {id:uid(),num:'',creado:new Date().toISOString(),recibido:today(),entrega:'',estado:'recibido',cliente:{nombre:'',telefono:'',documento:'',correo:''},equipo:{tipo:'Portátil',marca:'',modelo:'',serial:'',clave:'',accesorios:[],fisico:''},falla:'',diagnostico:'',items:[{tipo:'Servicio',servicio:SERVICIOS[0],desc:'',valor:''}],pagos:[],notas:''}}
+function vForm(o){
+  const isNew=!o; editing=o?JSON.parse(JSON.stringify(o)):blank(); const e=editing;
+  const opt=(arr,v)=>arr.map(x=>`<option${x===v?' selected':''}>${esc(x)}</option>`).join('');
+  $('#view').innerHTML=`
+  <div class="top"><div><h1>${isNew?'Nueva orden de servicio':'Orden '+esc(e.num)}</h1><p>${isNew?'Llena los datos al recibir el equipo. Los campos con * son obligatorios.':'Creada el '+fdate(e.creado.slice(0,10))}</p></div>
+  ${isNew?'':`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-print="${e.id}"><svg><use href="#i-print"/></svg>Imprimir</button>${waBtn(e)}</div>`}</div>
+  <form class="form" id="fo" novalidate>
+    <div class="fs"><h3><i>1</i>Estado del trabajo</h3><div class="status-pick" id="sp">${Object.entries(ESTADOS).map(([k,s])=>`<button type="button" data-s="${k}" style="--c:${s.c}" aria-pressed="${e.estado===k}">${s.t}</button>`).join('')}</div></div>
+    <div class="fs"><h3><i>2</i>Cliente</h3><div class="row" style="--cols:4">
+      <label class="f req"><span>Nombre completo</span><input id="c_nombre" value="${esc(e.cliente.nombre)}" autocomplete="off"></label>
+      <label class="f req"><span>Celular / WhatsApp</span><input id="c_telefono" inputmode="tel" value="${esc(e.cliente.telefono)}" placeholder="300 123 4567"></label>
+      <label class="f"><span>Cédula o NIT</span><input id="c_documento" value="${esc(e.cliente.documento)}"></label>
+      <label class="f"><span>Correo</span><input id="c_correo" type="email" value="${esc(e.cliente.correo)}"></label></div>
+      <div class="err" id="errC"></div></div>
+    <div class="fs"><h3><i>3</i>Equipo recibido</h3><div class="row" style="--cols:4">
+      <label class="f"><span>Tipo de equipo</span><select id="q_tipo">${opt(TIPOS,e.equipo.tipo)}</select></label>
+      <label class="f"><span>Marca</span><input id="q_marca" value="${esc(e.equipo.marca)}" placeholder="Lenovo, HP, Asus…"></label>
+      <label class="f"><span>Modelo</span><input id="q_modelo" value="${esc(e.equipo.modelo)}"></label>
+      <label class="f"><span>Serial</span><input id="q_serial" value="${esc(e.equipo.serial)}"></label></div>
+      <div class="row" style="--cols:2;margin-top:12px">
+      <label class="f"><span>Contraseña o PIN del equipo (si el cliente la deja)</span><input id="q_clave" value="${esc(e.equipo.clave)}"></label>
+      <label class="f"><span>Estado físico (golpes, rayones, pantalla…)</span><input id="q_fisico" value="${esc(e.equipo.fisico)}"></label></div>
+      <div style="margin-top:12px"><span style="font-size:.82rem;font-weight:500;color:var(--muted)">Accesorios recibidos</span><div class="checks" id="acc" style="margin-top:6px">${ACCESORIOS.map(a=>`<label><input type="checkbox" value="${esc(a)}"${e.equipo.accesorios.includes(a)?' checked':''}>${esc(a)}</label>`).join('')}</div></div></div>
+    <div class="fs"><h3><i>4</i>Falla y diagnóstico</h3><div class="row" style="--cols:2">
+      <label class="f req"><span>Falla reportada por el cliente</span><textarea id="falla">${esc(e.falla)}</textarea></label>
+      <label class="f"><span>Diagnóstico del técnico</span><textarea id="diagnostico">${esc(e.diagnostico)}</textarea></label></div>
+      <div class="row" style="--cols:3;margin-top:12px">
+      <label class="f"><span>Fecha de recibido</span><input id="recibido" type="date" value="${esc(e.recibido)}"></label>
+      <label class="f"><span>Entrega estimada</span><input id="entrega" type="date" value="${esc(e.entrega)}"></label>
+      <label class="f"><span>Notas internas</span><input id="notas" value="${esc(e.notas)}" placeholder="Solo para ti, no sale impreso"></label></div>
+      <div class="err" id="errF"></div></div>
+    <div class="fs"><h3><i>5</i>Servicios y repuestos</h3><div class="lines" id="items"></div>
+      <button class="btn btn-sm" type="button" id="addItem" style="margin-top:10px"><svg><use href="#i-plus"/></svg>Agregar servicio o repuesto</button>
+      <div class="totals" id="tots"></div></div>
+    <div class="fs"><h3><i>6</i>Pagos y abonos</h3><div class="lines" id="pagos"></div>
+      <button class="btn btn-sm" type="button" id="addPago" style="margin-top:10px"><svg><use href="#i-plus"/></svg>Registrar pago o abono</button></div>
+    <div class="form-bar">
+      ${isNew?'':'<button class="btn btn-d" type="button" id="del">Eliminar orden</button>'}
+      <a class="btn" href="#ordenes">Cancelar</a>
+      <button class="btn btn-p" type="submit">${isNew?'Crear orden':'Guardar cambios'}</button>
+    </div>
+  </form>`;
+  const drawItems=()=>{$('#items').innerHTML=e.items.map((it,i)=>`<div class="line" data-i="${i}">
+      <select data-k="tipo" aria-label="Tipo">${opt(['Servicio','Repuesto'],it.tipo==='Repuesto'?'Repuesto':'Servicio')}</select>
+      <select data-k="servicio" aria-label="Servicio">${opt(SERVICIOS,it.servicio||it.tipo)}</select>
+      <input data-k="desc" value="${esc(it.desc)}" placeholder="Detalle (opcional)" aria-label="Detalle">
+      <input data-k="valor" type="number" min="0" step="1000" value="${esc(it.valor)}" placeholder="Valor $" aria-label="Valor">
+      <button class="btn btn-i btn-sm x" type="button" data-rm="${i}" aria-label="Quitar"><svg><use href="#i-x"/></svg></button></div>`).join('')||'<p class="note">Agrega al menos un servicio con su valor.</p>';drawTot()};
+  const drawPagos=()=>{$('#pagos').innerHTML=e.pagos.map((p,i)=>`<div class="line pay" data-i="${i}">
+      <input data-k="fecha" type="date" value="${esc(p.fecha)}" aria-label="Fecha">
+      <input data-k="valor" type="number" min="0" step="1000" value="${esc(p.valor)}" placeholder="Valor $" aria-label="Valor">
+      <select data-k="metodo" aria-label="Forma de pago">${opt(METODOS,p.metodo)}</select>
+      <input data-k="nota" value="${esc(p.nota)}" placeholder="Nota (abono, pago final…)" aria-label="Nota">
+      <button class="btn btn-i btn-sm x" type="button" data-rm="${i}" aria-label="Quitar"><svg><use href="#i-x"/></svg></button></div>`).join('')||'<p class="note">Sin pagos todavía.</p>';drawTot()};
+  const drawTot=()=>{const t=total(e),p=pagado(e),s=t-p;$('#tots').innerHTML=`<div><span>Total</span><b class="num">${money(t)}</b></div><div><span>Pagado</span><span class="num">${money(p)}</span></div><div class="big"><span>Saldo</span><span class="num ${s>0?'saldo-pend':'saldo-ok'}">${money(s)}</span></div>`};
+  drawItems();drawPagos();
+  const bindLines=(sel,arr,redraw)=>{const el=$(sel);
+    el.addEventListener('input',ev=>{const row=ev.target.closest('[data-i]');if(!row)return;const it=arr()[+row.dataset.i];const k=ev.target.dataset.k;it[k]=ev.target.value;
+      if(k==='servicio'&&ev.target.value==='Repuesto')it.tipo='Repuesto';drawTot()});
+    el.addEventListener('click',ev=>{const b=ev.target.closest('[data-rm]');if(!b)return;arr().splice(+b.dataset.rm,1);redraw()})};
+  bindLines('#items',()=>e.items,drawItems);bindLines('#pagos',()=>e.pagos,drawPagos);
+  $('#addItem').onclick=()=>{e.items.push({tipo:'Servicio',servicio:SERVICIOS[0],desc:'',valor:''});drawItems();$('#items .line:last-child input[data-k=valor]')?.focus()};
+  $('#addPago').onclick=()=>{e.pagos.push({fecha:today(),valor:Math.max(0,total(e)-pagado(e))||'',metodo:'Efectivo',nota:e.pagos.length?'Pago':'Abono'});drawPagos()};
+  $('#sp').onclick=ev=>{const b=ev.target.closest('[data-s]');if(!b)return;e.estado=b.dataset.s;document.querySelectorAll('#sp button').forEach(x=>x.setAttribute('aria-pressed',x===b))};
+  ['c_nombre','c_telefono','falla'].forEach(id=>$('#'+id).addEventListener('input',()=>{$('#errC').textContent='';$('#errF').textContent=''}));
+  if(!isNew)$('#del').onclick=async()=>{if(await confirmar('¿Eliminar la orden '+e.num+'?','Se borrará con sus pagos. Esto no se puede deshacer.','Eliminar')){db.orders=db.orders.filter(x=>x.id!==e.id);save();toast('Orden eliminada');location.hash='#ordenes'}};
+  $('#fo').onsubmit=ev=>{ev.preventDefault();
+    const g=id=>$('#'+id).value.trim();
+    e.cliente={nombre:g('c_nombre'),telefono:g('c_telefono'),documento:g('c_documento'),correo:g('c_correo')};
+    e.equipo={tipo:g('q_tipo'),marca:g('q_marca'),modelo:g('q_modelo'),serial:g('q_serial'),clave:g('q_clave'),fisico:g('q_fisico'),accesorios:[...document.querySelectorAll('#acc input:checked')].map(i=>i.value)};
+    e.falla=g('falla');e.diagnostico=g('diagnostico');e.recibido=g('recibido')||today();e.entrega=g('entrega');e.notas=g('notas');
+    e.items=e.items.filter(i=>i.desc||+i.valor||i.servicio);e.pagos=e.pagos.filter(p=>+p.valor>0);
+    let bad=false;
+    if(!e.cliente.nombre||!e.cliente.telefono){$('#errC').textContent='Escribe el nombre y el celular del cliente.';bad=true}
+    if(!e.falla){$('#errF').textContent='Describe la falla que reporta el cliente.';bad=true}
+    if(bad){toast('Faltan datos obligatorios');(document.querySelector('.err:not(:empty)')||document.body).scrollIntoView({behavior:'smooth',block:'center'});return}
+    if(e.estado==='entregado'&&!e.entregadoEn)e.entregadoEn=today();
+    if(isNew){e.num=db.settings.prefijo+'-'+String(db.settings.siguiente).padStart(4,'0');db.settings.siguiente++;db.orders.push(e)}
+    else{db.orders=db.orders.map(x=>x.id===e.id?e:x)}
+    if(save()){toast(isNew?'Orden '+e.num+' creada':'Cambios guardados');location.hash='#orden-'+e.id;if(!isNew)route()}
+  };
+}
+function waBtn(o){const n=waNum(o.cliente.telefono);if(!n)return '';const s=saldo(o);
+  const msg=o.estado==='listo'?`Hola ${o.cliente.nombre}, te escribimos de ${db.settings.negocio}. Tu ${o.equipo.tipo.toLowerCase()} (orden ${o.num}) ya está listo para recoger.${s>0?' Saldo pendiente: '+money(s)+'.':''} ¡Gracias por confiar en nosotros!`
+    :`Hola ${o.cliente.nombre}, te escribimos de ${db.settings.negocio} sobre tu orden ${o.num}. Estado actual: ${ESTADOS[o.estado].t}.`;
+  return `<a class="btn btn-wa" target="_blank" rel="noopener" href="https://wa.me/${n}?text=${encodeURIComponent(msg)}"><svg><use href="#i-wa"/></svg>Avisar por WhatsApp</a>`}
+
+/* ---------- imprimir ---------- */
+function imprimir(id){const o=db.orders.find(x=>x.id===id);if(!o)return;const st=db.settings;const t=total(o),p=pagado(o);
+  $('#print').innerHTML=`<div class="p-head"><div><img src="img/nexotik-logo-claro.svg?v=2" alt="${esc(st.negocio)}"><div style="font-size:9pt;color:#4b5e82;margin-top:4px">${esc([st.nit&&'NIT '+st.nit,st.telefono&&'WhatsApp '+st.telefono,st.direccion,st.correo].filter(Boolean).join(' · '))}</div></div>
+    <div class="meta"><span>ORDEN DE SERVICIO</span><b>${esc(o.num)}</b>Recibido: ${fdate(o.recibido)}<br>Entrega estimada: ${fdate(o.entrega)}<br>Estado: ${ESTADOS[o.estado].t}</div></div>
+  <div class="p-box"><h4>Cliente</h4><div class="p-grid"><div><span>Nombre:</span> ${esc(o.cliente.nombre)}</div><div><span>Celular:</span> ${esc(o.cliente.telefono)}</div><div><span>Documento:</span> ${esc(o.cliente.documento||'—')}</div><div><span>Correo:</span> ${esc(o.cliente.correo||'—')}</div></div></div>
+  <div class="p-box"><h4>Equipo</h4><div class="p-grid"><div><span>Tipo:</span> ${esc(o.equipo.tipo)}</div><div><span>Marca y modelo:</span> ${esc([o.equipo.marca,o.equipo.modelo].filter(Boolean).join(' ')||'—')}</div><div><span>Serial:</span> ${esc(o.equipo.serial||'—')}</div><div><span>Accesorios:</span> ${esc(o.equipo.accesorios.join(', ')||'Ninguno')}</div><div style="grid-column:1/-1"><span>Estado físico:</span> ${esc(o.equipo.fisico||'Sin observaciones')}</div></div></div>
+  <div class="p-box"><h4>Falla reportada</h4><div style="white-space:pre-line">${esc(o.falla)}</div>${o.diagnostico?`<h4 style="margin-top:8px">Diagnóstico</h4><div style="white-space:pre-line">${esc(o.diagnostico)}</div>`:''}</div>
+  <div class="p-box"><h4>Servicios y repuestos</h4><table class="p-tbl"><thead><tr><th>Concepto</th><th>Detalle</th><th style="text-align:right">Valor</th></tr></thead><tbody>${o.items.map(i=>`<tr><td>${esc(i.servicio||i.tipo)}</td><td>${esc(i.desc)}</td><td style="text-align:right">${money(i.valor)}</td></tr>`).join('')}</tbody></table>
+    <div class="p-tot"><div><span>Total</span><b>${money(t)}</b></div><div><span>Abonado</span><span>${money(p)}</span></div><div><span>Saldo</span><b>${money(t-p)}</b></div></div></div>
+  <div class="p-box"><h4>Condiciones</h4><div class="p-cond">${esc(st.condiciones.replace(/\{garantia\}/g,st.garantia))}</div></div>
+  <div class="p-sign"><div>Firma del cliente</div><div>Recibido por ${esc(st.negocio)}</div></div>`;
+  const imgs=[...document.querySelectorAll('#print img')];Promise.all(imgs.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r}))).then(()=>window.print());
+}
+
+/* ---------- cuentas ---------- */
+let mesSel=ym(today());
+function vCuentas(){
+  const meses=[];{const d=new Date();for(let i=0;i<6;i++){const x=new Date(d.getFullYear(),d.getMonth()-i,1);meses.unshift(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'))}}
+  const pagos=db.orders.flatMap(o=>o.pagos.map(p=>({...p,o})));
+  const ing=m=>pagos.filter(p=>ym(p.fecha)===m).reduce((a,p)=>a+(+p.valor||0),0);
+  const gas=m=>db.expenses.filter(g=>ym(g.fecha)===m).reduce((a,g)=>a+(+g.valor||0),0);
+  const mx=Math.max(1,...meses.map(m=>Math.max(ing(m),gas(m))));
+  const pm=pagos.filter(p=>ym(p.fecha)===mesSel);const im=ing(mesSel),gm=gas(mesSel);
+  const entregadas=db.orders.filter(o=>o.estado==='entregado'&&ym(o.entregadoEn||o.recibido)===mesSel);
+  const porMetodo=METODOS.map(k=>[k,pm.filter(p=>p.metodo===k).reduce((a,p)=>a+(+p.valor||0),0)]).filter(x=>x[1]>0);
+  const ordsMes=db.orders.filter(o=>ym(o.recibido)===mesSel&&o.estado!=='cancelado');
+  const porServ=SERVICIOS.map(s=>[s,ordsMes.flatMap(o=>o.items).filter(i=>(i.servicio||i.tipo)===s).reduce((a,i)=>a+(+i.valor||0),0)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  const topServ=porServ[0]?.[1]||1;const [y,mm]=mesSel.split('-');
+  const optMes=[...new Set([...meses,...pagos.map(p=>ym(p.fecha)),...db.expenses.map(g=>ym(g.fecha))].filter(Boolean))].sort().reverse().map(m=>{const [a,b]=m.split('-');return `<option value="${m}"${m===mesSel?' selected':''}>${MES[+b-1]} ${a}</option>`}).join('');
+  $('#view').innerHTML=`
+  <div class="top"><div><h1>Cuentas</h1><p>Ingresos, gastos y ganancia del negocio</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><select id="mes" style="width:auto">${optMes}</select><button class="btn" type="button" data-act="csv"><svg><use href="#i-down"/></svg>Exportar a Excel (CSV)</button></div></div>
+  <div class="grid kpis">
+    <div class="card kpi" style="--c:#16a34a"><small>Ingresos de ${MES[+mm-1]}</small><b>${money(im)}</b><span>${pm.length} pagos recibidos</span></div>
+    <div class="card kpi" style="--c:#f59e0b"><small>Gastos de ${MES[+mm-1]}</small><b>${money(gm)}</b><span>${db.expenses.filter(g=>ym(g.fecha)===mesSel).length} gastos</span></div>
+    <div class="card kpi" style="--c:${im-gm>=0?'#1f7bff':'#dc2626'}"><small>Ganancia de ${MES[+mm-1]}</small><b>${money(im-gm)}</b><span>Ingresos menos gastos</span></div>
+    <div class="card kpi" style="--c:#7c3aed"><small>Equipos entregados</small><b>${entregadas.length}</b><span>${ordsMes.length} órdenes recibidas en el mes</span></div>
+  </div>
+  <div class="grid two" style="margin-top:16px">
+    <div class="card"><div class="sec-t"><h2>Últimos 6 meses</h2><div class="legend"><span style="--c:#1f7bff">Ingresos</span><span style="--c:#f59e0b">Gastos</span></div></div>
+      <div class="bars">${meses.map(m=>{const [a,b]=m.split('-');return `<div class="bar"><b>${ing(m)?money(ing(m)).replace(/\s/g,''):''}</b><div class="pair"><i style="height:${ing(m)/mx*100}%"></i><i class="g" style="height:${gas(m)/mx*100}%"></i></div><small>${MES[+b-1]}</small></div>`}).join('')}</div></div>
+    <div class="card"><div class="sec-t"><h2>Pagos por método</h2></div>${porMetodo.length?porMetodo.map(([k,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><span>${k}</span><b class="num">${money(v)}</b></div><div class="meter"><i style="width:${v/im*100}%"></i></div></div>`).join(''):'<p class="note">Sin pagos este mes.</p>'}</div>
+  </div>
+  <div class="grid two" style="margin-top:16px">
+    <div class="card"><div class="sec-t"><h2>Facturado por servicio</h2></div>${porServ.length?porServ.map(([k,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px"><span>${esc(k)}</span><b class="num">${money(v)}</b></div><div class="meter"><i style="width:${v/topServ*100}%"></i></div></div>`).join(''):'<p class="note">Sin órdenes recibidas este mes.</p>'}</div>
+    <div class="card"><div class="sec-t"><h2>Gastos</h2></div>
+      <form id="fg" class="row" style="--cols:2" novalidate>
+        <label class="f"><span>Fecha</span><input id="g_fecha" type="date" value="${today()}"></label>
+        <label class="f"><span>Valor</span><input id="g_valor" type="number" min="0" step="1000" placeholder="$"></label>
+        <label class="f"><span>Categoría</span><select id="g_cat">${GASTO_CAT.map(c=>`<option>${c}</option>`).join('')}</select></label>
+        <label class="f"><span>Concepto</span><input id="g_concepto" placeholder="Ej: memoria RAM 8 GB"></label>
+        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px"><span class="err" id="errG"></span><button class="btn btn-p" type="submit"><svg><use href="#i-plus"/></svg>Agregar gasto</button></div>
+      </form>
+      <div class="list" style="margin-top:14px">${db.expenses.filter(g=>ym(g.fecha)===mesSel).sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(g=>`<div class="li" style="cursor:default"><div><b>${esc(g.concepto||g.cat)}</b><small>${fdate(g.fecha)} · ${esc(g.cat)}</small></div><div style="display:flex;gap:8px;align-items:center"><b class="num">${money(g.valor)}</b><button class="btn btn-i btn-sm" type="button" data-delg="${g.id}" aria-label="Eliminar gasto"><svg><use href="#i-x"/></svg></button></div></div>`).join('')||'<p class="note">Sin gastos en este mes.</p>'}</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="sec-t"><h2>Pagos recibidos en ${MES[+mm-1]} ${y}</h2></div>
+    <div class="tbl-wrap" style="border:0"><table><thead><tr><th>Fecha</th><th>Orden</th><th>Cliente</th><th>Método</th><th>Nota</th><th class="r">Valor</th></tr></thead><tbody>${pm.sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(p=>`<tr data-open="${p.o.id}"><td class="num">${fdate(p.fecha)}</td><td><b>${esc(p.o.num)}</b></td><td>${esc(p.o.cliente.nombre)}</td><td>${esc(p.metodo)}</td><td>${esc(p.nota)}</td><td class="r num">${money(p.valor)}</td></tr>`).join('')||`<tr><td colspan="6" style="text-align:center;color:var(--muted);cursor:default">Sin pagos este mes.</td></tr>`}</tbody></table></div></div>`;
+  $('#mes').onchange=e=>{mesSel=e.target.value;vCuentas()};
+  $('#fg').onsubmit=ev=>{ev.preventDefault();const v=+$('#g_valor').value;if(!(v>0)){$('#errG').textContent='Escribe el valor del gasto.';return}
+    db.expenses.push({id:uid(),fecha:$('#g_fecha').value||today(),valor:v,cat:$('#g_cat').value,concepto:$('#g_concepto').value.trim()});save();toast('Gasto agregado');mesSel=ym($('#g_fecha').value||today());vCuentas()};
+  $('#g_valor').oninput=()=>$('#errG').textContent='';
+}
+
+/* ---------- ajustes ---------- */
+function vAjustes(){const s=db.settings;
+  $('#view').innerHTML=`
+  <div class="top"><div><h1>Ajustes y copias de seguridad</h1><p>Datos del negocio que salen en la orden impresa</p></div></div>
+  <div class="grid two">
+  <form class="fs" id="fs" novalidate><h3>Datos del negocio</h3>
+    <div class="row" style="--cols:2">
+      <label class="f"><span>Nombre del negocio</span><input id="s_negocio" value="${esc(s.negocio)}"></label>
+      <label class="f"><span>NIT o cédula</span><input id="s_nit" value="${esc(s.nit)}"></label>
+      <label class="f"><span>Teléfono / WhatsApp</span><input id="s_telefono" value="${esc(s.telefono)}"></label>
+      <label class="f"><span>Correo</span><input id="s_correo" value="${esc(s.correo)}"></label>
+      <label class="f" style="grid-column:1/-1"><span>Dirección</span><input id="s_direccion" value="${esc(s.direccion)}"></label>
+      <label class="f"><span>Prefijo de las órdenes</span><input id="s_prefijo" value="${esc(s.prefijo)}" maxlength="6"></label>
+      <label class="f"><span>Días de garantía</span><input id="s_garantia" type="number" min="0" value="${esc(s.garantia)}"></label>
+      <label class="f"><span>Siguiente número de orden</span><input id="s_siguiente" type="number" min="1" value="${esc(s.siguiente)}"></label>
+      <label class="f" style="grid-column:1/-1"><span>Condiciones que salen en la orden ({garantia} se cambia por los días)</span><textarea id="s_condiciones" style="min-height:130px">${esc(s.condiciones)}</textarea></label>
+    </div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-p" type="submit">Guardar ajustes</button></div></form>
+  <div class="grid" style="align-content:start">
+    <div class="card"><h3 style="margin-bottom:8px">Copias de seguridad</h3>
+      <p class="note" style="margin:0 0 14px">Tus órdenes se guardan <b>solo en este navegador</b>. Si borras el historial, cambias de computador o se daña el equipo, se pierden. Descarga una copia cada semana y guárdala en Google Drive o en una memoria.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-p" type="button" data-act="backup"><svg><use href="#i-down"/></svg>Descargar copia</button><button class="btn" type="button" data-act="import"><svg><use href="#i-up"/></svg>Restaurar copia</button></div>
+      <p style="margin:12px 0 0;color:var(--muted);font-size:.85rem">Última copia: <b>${db.lastBackup?fdate(db.lastBackup.slice(0,10)):'nunca'}</b> · ${db.orders.length} órdenes · ${db.expenses.length} gastos</p></div>
+    <div class="card"><h3 style="margin-bottom:8px">Exportar</h3><p style="margin:0 0 12px;color:var(--muted)">Descarga tus órdenes en una tabla para abrir en Excel o Google Sheets.</p><button class="btn" type="button" data-act="csv"><svg><use href="#i-down"/></svg>Exportar a Excel (CSV)</button></div>
+    <div class="card"><h3 style="margin-bottom:8px">Zona de peligro</h3><p style="margin:0 0 12px;color:var(--muted)">Borra todas las órdenes y gastos de este navegador. Descarga una copia antes.</p><button class="btn btn-d" type="button" data-act="wipe">Borrar todos los datos</button></div>
+  </div></div>`;
+  $('#fs').onsubmit=ev=>{ev.preventDefault();const g=id=>$('#s_'+id).value.trim();
+    Object.assign(db.settings,{negocio:g('negocio')||'Nexotik',nit:g('nit'),telefono:g('telefono'),correo:g('correo'),direccion:g('direccion'),prefijo:(g('prefijo')||'NX').toUpperCase(),garantia:+g('garantia')||0,siguiente:Math.max(1,+g('siguiente')||1),condiciones:$('#s_condiciones').value});
+    save();toast('Ajustes guardados')};
+}
+
+/* ---------- copias, CSV, ejemplo ---------- */
+function backup(){db.lastBackup=new Date().toISOString();save();download(`nexotik-copia-${today()}.json`,JSON.stringify({app:'nexotik-ordenes',version:1,fecha:db.lastBackup,data:db},null,1),'application/json');toast('Copia descargada');sideFoot();if(location.hash==='#ajustes')vAjustes()}
+async function restore(file){try{const j=JSON.parse(await file.text());const d=j.data||j;if(!Array.isArray(d.orders))throw 0;
+    if(!await confirmar('¿Restaurar esta copia?',`La copia tiene ${d.orders.length} órdenes y ${(d.expenses||[]).length} gastos. Reemplazará los datos actuales de este navegador.`,'Restaurar'))return;
+    db=Object.assign(defaults(),d);db.settings=Object.assign(defaults().settings,d.settings);save();toast('Copia restaurada');sideFoot();route()}
+  catch(e){toast('Ese archivo no es una copia válida de Nexotik')}}
+function csv(){const H=['Orden','Recibido','Entrega','Estado','Cliente','Celular','Documento','Equipo','Marca','Modelo','Serial','Falla','Servicios','Total','Pagado','Saldo'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=db.orders.map(o=>[o.num,o.recibido,o.entrega,ESTADOS[o.estado].t,o.cliente.nombre,o.cliente.telefono,o.cliente.documento,o.equipo.tipo,o.equipo.marca,o.equipo.modelo,o.equipo.serial,o.falla,o.items.map(i=>i.servicio+(i.desc?' ('+i.desc+')':'')).join('; '),total(o),pagado(o),saldo(o)]);
+  download(`nexotik-ordenes-${today()}.csv`,'﻿'+[H,...rows].map(r=>r.map(q).join(';')).join('\r\n'),'text/csv;charset=utf-8');toast('Archivo CSV descargado')}
+function demo(){const d=(n)=>{const x=new Date();x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)};
+  const mk=(n,nombre,tel,tipo,marca,modelo,falla,estado,items,pagos,ent)=>{const o=blank();o.num=db.settings.prefijo+'-'+String(db.settings.siguiente++).padStart(4,'0');o.creado=new Date(Date.now()-n*864e5).toISOString();o.recibido=d(n);o.entrega=d(n-3);
+    Object.assign(o.cliente,{nombre:'(Ejemplo) '+nombre,telefono:tel});Object.assign(o.equipo,{tipo,marca,modelo,accesorios:['Cargador']});o.falla=falla;o.estado=estado;o.items=items.map(([s,v])=>({tipo:s==='Repuesto'?'Repuesto':'Servicio',servicio:s,desc:'',valor:v}));o.pagos=pagos.map(([f,v,m])=>({fecha:d(f),valor:v,metodo:m,nota:'Pago'}));if(ent)o.entregadoEn=d(ent);return o};
+  db.orders.push(
+    mk(40,'Laura Gómez','3001234567','Portátil','Lenovo','IdeaPad 3','Está muy lento y se calienta','entregado',[['Mantenimiento preventivo',80000],['Optimización del rendimiento',40000]],[[38,120000,'Nequi']],38),
+    mk(25,'Andrés Ruiz','3109876543','Computador de mesa','HP','ProDesk','No enciende','entregado',[['Mantenimiento correctivo',90000],['Repuesto',150000]],[[25,100000,'Efectivo'],[20,140000,'Efectivo']],20),
+    mk(6,'Tienda Don José','3204567890','Cámara WiFi','Imou','Ranger 2','Instalar 3 cámaras en el local','listo',[['Instalación de cámaras WiFi',180000]],[[6,90000,'Daviplata']]),
+    mk(3,'Carolina Pérez','3156789012','Portátil','Asus','VivoBook','Tiene virus y publicidad','reparacion',[['Eliminación de virus',60000],['Instalación de Office',40000]],[]),
+    mk(1,'Jorge Herrera','3012223344','Portátil','Dell','Inspiron 15','Instalar Windows 11','recibido',[['Instalación de Windows',70000]],[[1,30000,'Efectivo']]));
+  db.expenses.push({id:uid(),fecha:d(24),valor:110000,cat:'Repuestos',concepto:'(Ejemplo) Fuente de poder'},{id:uid(),fecha:d(5),valor:25000,cat:'Transporte',concepto:'(Ejemplo) Visita a cliente'});
+  save();toast('Datos de ejemplo cargados. Puedes borrarlos en Ajustes.');route()}
+
+/* ---------- eventos globales ---------- */
+document.addEventListener('click',async e=>{
+  const pr=e.target.closest('[data-print]');if(pr){e.stopPropagation();imprimir(pr.dataset.print);return}
+  const op=e.target.closest('[data-open]');if(op){location.hash='#orden-'+op.dataset.open;return}
+  const dg=e.target.closest('[data-delg]');if(dg){if(await confirmar('¿Eliminar este gasto?','Se quitará de las cuentas.','Eliminar')){db.expenses=db.expenses.filter(g=>g.id!==dg.dataset.delg);save();vCuentas()}return}
+  const a=e.target.closest('[data-act]');if(!a)return;const k=a.dataset.act;
+  if(k==='backup')backup();
+  if(k==='import')$('#fileIn').click();
+  if(k==='csv')csv();
+  if(k==='demo')demo();
+  if(k==='wipe'&&await confirmar('¿Borrar todos los datos?','Se eliminarán todas las órdenes y gastos de este navegador. Esto no se puede deshacer.','Borrar todo')){const s=db.settings;db=defaults();db.settings=s;db.settings.siguiente=1;save();toast('Datos borrados');sideFoot();route()}
+});
+$('#fileIn').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)restore(f)};
+addEventListener('beforeunload',()=>{});
+sideFoot();route();
+})();
+</script>
