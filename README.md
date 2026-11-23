@@ -1,3 +1,5 @@
+<p align="center"><img src="img/nexotech-logo-claro.svg" alt="NexoTech" width="420"></p>
+
 # NexoTech · Servicio Técnico de Computadores
 
 *Tu tecnología, en buenas manos.*

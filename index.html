@@ -257,7 +257,7 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
 
 <nav>
   <div class="wrap">
-    <a class="logo" href="#inicio"><img src="img/nexotech-logo.svg" alt="NexoTech. Tu tecnología, en buenas manos." width="186" height="54"></a>
+    <a class="logo" href="#inicio"><img src="img/nexotech-logo.svg" alt="NexoTech. Tu tecnología, en buenas manos." width="205" height="54"></a>
     <div class="menu"><a class="on" href="#inicio">Inicio</a><a href="#destacados">Destacados</a><a href="#servicios">Servicios</a><a href="#proceso">Proceso</a><a href="#consejos">Consejos</a><a href="#contacto">Contacto</a></div>
     <div class="nav-r"><a class="btn" href="https://wa.me/573218757723" target="_blank" rel="noopener">Escríbenos</a></div>
   </div>
@@ -372,7 +372,7 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
         <div style="color:var(--muted-d);font-size:.85rem;padding-left:32px">Atención por WhatsApp. Cuéntanos qué necesitas y te respondemos.</div>
       </div>
       <div>
-        <div class="logo"><img src="img/nexotech-logo.svg" alt="NexoTech. Tu tecnología, en buenas manos." width="303" height="88"></div>
+        <div class="logo"><img src="img/nexotech-logo.svg" alt="NexoTech. Tu tecnología, en buenas manos." width="334" height="88"></div>
         <p>Servicio técnico de computadores, instalación de cámaras WiFi y desarrollo de páginas web.</p>
       </div>
     </div>
@@ -397,10 +397,10 @@ const clamp=v=>Math.max(0,Math.min(1,v));
 document.documentElement.style.scrollBehavior='auto';
 let anim=0;
 function glide(y){
-  cancelAnimationFrame(anim);
+  clearTimeout(anim);
   const y0=scrollY,d=y-y0,dur=Math.min(1400,Math.max(600,Math.abs(d)*.45)),t0=performance.now();
   const ease=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
-  (function step(t){const k=Math.min(1,(t-t0)/dur);scrollTo(0,y0+d*ease(k));if(k<1)anim=requestAnimationFrame(step)})(t0);
+  (function step(){const k=Math.min(1,(performance.now()-t0)/dur);scrollTo(0,y0+d*ease(k));if(k<1)anim=setTimeout(step,16)})();
 }
 document.addEventListener('click',e=>{
   const a=e.target.closest('a[href^="#"]');if(!a)return;
@@ -409,7 +409,7 @@ document.addEventListener('click',e=>{
   glide(id==='#inicio'?0:el.getBoundingClientRect().top+scrollY);
   history.replaceState(null,'',id);
 });
-['wheel','touchstart','keydown'].forEach(ev=>addEventListener(ev,()=>cancelAnimationFrame(anim),{passive:true}));
+['wheel','touchstart','keydown'].forEach(ev=>addEventListener(ev,()=>clearTimeout(anim),{passive:true}));
 
 const S=[
  {id:'prev',t:'Mantenimiento preventivo',s:'Limpieza y revisión para que no se dañe.',d:['Limpieza interna de polvo y ventiladores','Cambio de pasta térmica','Revisión de disco, memoria y temperatura','Alarga la vida de tu equipo']},
