@@ -379,7 +379,7 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
         <p>Servicio técnico de computadores, instalación de cámaras WiFi y desarrollo de páginas web.</p>
       </div>
     </div>
-    <div class="legal"><span>© Nexotik · Servicio técnico de computadores · Cámaras WiFi · Desarrollo web</span><span>WhatsApp 321 875 7723</span></div>
+    <div class="legal"><span>© <span id="anio">2026</span> Nexotik. Todos los derechos reservados.</span><span>Servicio técnico de computadores · Cámaras WiFi · Desarrollo web</span></div>
   </div>
 </footer>
 
@@ -395,6 +395,7 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const WA='https://wa.me/573218757723';
 const clamp=v=>Math.max(0,Math.min(1,v));
+document.getElementById('anio').textContent=new Date().getFullYear();
 
 /* desplazamiento suave al tocar un enlace interno */
 document.documentElement.style.scrollBehavior='auto';
