@@ -410,7 +410,7 @@ const TIPS=[
 ];
 
 document.getElementById('svc').innerHTML=S.map(s=>`<button class="s" id="s-${s.id}" data-id="${s.id}" data-in>
-  <svg><use href="#l-${s.id}"/></svg>${s.nuevo?'<div><span class="nw">NUEVO</span></div>':''}<h3>${s.t}</h3><p>${s.s}</p></button>`).join('');
+  <svg><use href="#l-${s.id}"/></svg><h3>${s.t}</h3><p>${s.s}</p></button>`).join('');
 
 const dlg=document.getElementById('dlg');
 function openDlg(t,s,list,msg){
