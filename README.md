@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="img/nexotik-logo.svg">
-    <source media="(prefers-color-scheme: light)" srcset="img/nexotik-logo-claro.svg">
-    <img src="img/nexotik-logo-claro.svg" alt="Nexotik" width="420">
+    <source media="(prefers-color-scheme: dark)" srcset="img/nexotik-logo.svg?v=2">
+    <source media="(prefers-color-scheme: light)" srcset="img/nexotik-logo-claro.svg?v=2">
+    <img src="img/nexotik-logo-claro.svg?v=2" alt="Nexotik" width="420">
   </picture>
 </p>
 
