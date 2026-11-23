@@ -19,7 +19,11 @@
   --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scrollbar-color:var(--blue) var(--navy)}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:var(--navy)}
+::-webkit-scrollbar-thumb{background:var(--blue);border-radius:10px;border:3px solid var(--navy)}
+::-webkit-scrollbar-thumb:hover{background:var(--blue-2)}
 html,body{margin:0;padding:0}
 img{max-width:100%}
 [hidden]{display:none!important}
