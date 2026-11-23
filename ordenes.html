@@ -181,10 +181,10 @@ dialog .acts{display:flex;gap:10px;justify-content:flex-end}
 /* hoja imprimible */
 #print{display:none}
 @media print{
-  @page{size:letter;margin:12mm}
-  body{background:#fff}
+  @page{size:letter;margin:0}
+  html,body{background:#fff}
   .app,dialog,.toast{display:none!important}
-  #print{display:block;color:#0b1733;font:11pt/1.45 var(--body)}
+  #print{display:block;color:#0b1733;font:11pt/1.45 var(--body);padding:12mm 14mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 .p-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid #1f7bff;padding-bottom:10px;margin-bottom:12px}
 .p-head img{height:64px}
@@ -200,8 +200,13 @@ dialog .acts{display:flex;gap:10px;justify-content:flex-end}
 .p-tot{display:grid;justify-content:end;gap:2px;margin-top:6px;font-size:10.5pt}
 .p-tot div{display:flex;justify-content:space-between;gap:30px}
 .p-cond{font-size:8.5pt;color:#4b5e82;white-space:pre-line}
-.p-sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:34px;font-size:9pt;text-align:center}
-.p-sign div{border-top:1px solid #0b1733;padding-top:4px}
+.p-sign{display:flex;justify-content:space-around;gap:30px;margin-top:90px;font-size:9pt;text-align:center;break-inside:avoid}
+.p-sign div{width:200px;border-top:1px solid #0b1733;padding-top:4px}
+.p-sign small{display:block;color:#4b5e82;font-size:8pt}
+.p-brand{display:flex;align-items:center;gap:10px}
+.p-brand img{height:48px!important}
+.p-brand b{display:block;font-family:var(--display);font-size:16pt;font-weight:600;color:#0b1733;line-height:1.1}
+.p-brand span{font-size:9pt;color:#1f7bff}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -249,7 +254,7 @@ const ACCESORIOS=['Cargador','Batería','Cable de poder','Mouse','Teclado','Bols
 const TIPOS=['Portátil','Computador de mesa','Todo en uno','Monitor','Impresora','Cámara WiFi','Celular o tablet','Otro'];
 const METODOS=['Efectivo','Nequi','Daviplata','Transferencia','Tarjeta','Otro'];
 const GASTO_CAT=['Repuestos','Herramientas','Transporte','Publicidad','Servicios (internet, luz)','Otro'];
-const defaults=()=>({orders:[],expenses:[],settings:{negocio:'Nexotik',telefono:'321 875 7723',direccion:'',nit:'',correo:'',prefijo:'NX',siguiente:1,garantia:30,condiciones:'1. La garantía cubre únicamente el trabajo realizado y es de {garantia} días a partir de la entrega.\n2. Los equipos que no se reclamen en 30 días después de avisar que están listos pueden generar costo de bodegaje.\n3. Nexotik no se hace responsable por información no respaldada por el cliente antes de la entrega del equipo.\n4. Para retirar el equipo es necesario presentar esta orden.'},lastBackup:null});
+const defaults=()=>({orders:[],expenses:[],settings:{negocio:'Nexotik',negDocTipo:'NIT',nit:'',persona:'Miguel Ángel Díaz Gutiérrez',perDocTipo:'C.C.',perDoc:'',emisor:'negocio',telefono:'321 875 7723',direccion:'',correo:'',prefijo:'NX',siguiente:1,garantia:30,condiciones:'1. La garantía cubre únicamente el trabajo realizado y es de {garantia} días a partir de la entrega.\n2. Los equipos que no se reclamen en 30 días después de avisar que están listos pueden generar costo de bodegaje.\n3. {emisor} no se hace responsable por información no respaldada por el cliente antes de la entrega del equipo.\n4. Para retirar el equipo es necesario presentar esta orden.'},lastBackup:null});
 let db;
 function load(){try{const r=localStorage.getItem(KEY);db=r?Object.assign(defaults(),JSON.parse(r)):defaults();db.settings=Object.assign(defaults().settings,db.settings)}catch(e){db=defaults()}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){toast('No se pudo guardar en este navegador');return false}}
@@ -268,6 +273,9 @@ const total=o=>o.items.reduce((a,i)=>a+(+i.valor||0),0);
 const pagado=o=>o.pagos.reduce((a,p)=>a+(+p.valor||0),0);
 const saldo=o=>o.estado==='cancelado'?0:total(o)-pagado(o);
 const pill=e=>`<span class="pill" style="--c:${ESTADOS[e]?.c||'#6b7280'}">${ESTADOS[e]?.t||e}</span>`;
+const DOC_TIPOS=['C.C.','NIT','C.E.','Pasaporte'];
+function emisorDe(o){const s=db.settings;const t=(o&&o.emisor)||s.emisor;
+  return t==='persona'?{tipo:'persona',nombre:s.persona||'—',doc:s.perDoc?s.perDocTipo+' '+s.perDoc:''}:{tipo:'negocio',nombre:s.negocio||'Nexotik',doc:s.nit?s.negDocTipo+' '+s.nit:''}}
 const waNum=t=>{let d=String(t||'').replace(/\D/g,'');if(d.length===10)d='57'+d;return d};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2400)}
 function confirmar(t,p,yes='Confirmar'){return new Promise(r=>{const d=$('#dlg');$('#dlgT').textContent=t;$('#dlgP').textContent=p;$('#dlgYes').textContent=yes;
@@ -345,7 +353,7 @@ function vOrdenes(){
 }
 
 /* ---------- formulario ---------- */
-function blank(){return {id:uid(),num:'',creado:new Date().toISOString(),recibido:today(),entrega:'',estado:'recibido',cliente:{nombre:'',telefono:'',documento:'',correo:''},equipo:{tipo:'Portátil',marca:'',modelo:'',serial:'',clave:'',accesorios:[],fisico:''},falla:'',diagnostico:'',items:[{tipo:'Servicio',servicio:SERVICIOS[0],desc:'',valor:''}],pagos:[],notas:''}}
+function blank(){return {id:uid(),num:'',creado:new Date().toISOString(),recibido:today(),entrega:'',estado:'recibido',emisor:db.settings.emisor,cliente:{nombre:'',telefono:'',docTipo:'C.C.',documento:'',correo:''},equipo:{tipo:'Portátil',marca:'',modelo:'',serial:'',clave:'',accesorios:[],fisico:''},falla:'',diagnostico:'',items:[{tipo:'Servicio',servicio:SERVICIOS[0],desc:'',valor:''}],pagos:[],notas:''}}
 function vForm(o){
   const isNew=!o; editing=o?JSON.parse(JSON.stringify(o)):blank(); const e=editing;
   const opt=(arr,v)=>arr.map(x=>`<option${x===v?' selected':''}>${esc(x)}</option>`).join('');
@@ -353,11 +361,12 @@ function vForm(o){
   <div class="top"><div><h1>${isNew?'Nueva orden de servicio':'Orden '+esc(e.num)}</h1><p>${isNew?'Llena los datos al recibir el equipo. Los campos con * son obligatorios.':'Creada el '+fdate(e.creado.slice(0,10))}</p></div>
   ${isNew?'':`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-print="${e.id}"><svg><use href="#i-print"/></svg>Imprimir</button>${waBtn(e)}</div>`}</div>
   <form class="form" id="fo" novalidate>
-    <div class="fs"><h3><i>1</i>Estado del trabajo</h3><div class="status-pick" id="sp">${Object.entries(ESTADOS).map(([k,s])=>`<button type="button" data-s="${k}" style="--c:${s.c}" aria-pressed="${e.estado===k}">${s.t}</button>`).join('')}</div></div>
+    <div class="fs"><h3><i>1</i>Estado del trabajo</h3><div class="status-pick" id="sp">${Object.entries(ESTADOS).map(([k,s])=>`<button type="button" data-s="${k}" style="--c:${s.c}" aria-pressed="${e.estado===k}">${s.t}</button>`).join('')}</div>
+      <div class="row" style="--cols:3;margin-top:14px"><label class="f"><span>Orden a nombre de</span><select id="emisor"><option value="negocio"${(e.emisor||db.settings.emisor)==='negocio'?' selected':''}>${esc(db.settings.negocio||'Nexotik')} (negocio)</option><option value="persona"${(e.emisor||db.settings.emisor)==='persona'?' selected':''}>${esc(db.settings.persona||'Mi nombre')} (persona natural)</option></select></label></div></div>
     <div class="fs"><h3><i>2</i>Cliente</h3><div class="row" style="--cols:4">
       <label class="f req"><span>Nombre completo</span><input id="c_nombre" value="${esc(e.cliente.nombre)}" autocomplete="off"></label>
       <label class="f req"><span>Celular / WhatsApp</span><input id="c_telefono" inputmode="tel" value="${esc(e.cliente.telefono)}" placeholder="300 123 4567"></label>
-      <label class="f"><span>Cédula o NIT</span><input id="c_documento" value="${esc(e.cliente.documento)}"></label>
+      <label class="f"><span>Documento</span><span style="display:grid;grid-template-columns:96px 1fr;gap:6px"><select id="c_docTipo" aria-label="Tipo de documento">${opt(DOC_TIPOS,e.cliente.docTipo||'C.C.')}</select><input id="c_documento" value="${esc(e.cliente.documento)}" aria-label="Número de documento"></span></label>
       <label class="f"><span>Correo</span><input id="c_correo" type="email" value="${esc(e.cliente.correo)}"></label></div>
       <div class="err" id="errC"></div></div>
     <div class="fs"><h3><i>3</i>Equipo recibido</h3><div class="row" style="--cols:4">
@@ -414,7 +423,7 @@ function vForm(o){
   if(!isNew)$('#del').onclick=async()=>{if(await confirmar('¿Eliminar la orden '+e.num+'?','Se borrará con sus pagos. Esto no se puede deshacer.','Eliminar')){db.orders=db.orders.filter(x=>x.id!==e.id);save();toast('Orden eliminada');location.hash='#ordenes'}};
   $('#fo').onsubmit=ev=>{ev.preventDefault();
     const g=id=>$('#'+id).value.trim();
-    e.cliente={nombre:g('c_nombre'),telefono:g('c_telefono'),documento:g('c_documento'),correo:g('c_correo')};
+    e.cliente={nombre:g('c_nombre'),telefono:g('c_telefono'),docTipo:g('c_docTipo'),documento:g('c_documento'),correo:g('c_correo')};e.emisor=g('emisor');
     e.equipo={tipo:g('q_tipo'),marca:g('q_marca'),modelo:g('q_modelo'),serial:g('q_serial'),clave:g('q_clave'),fisico:g('q_fisico'),accesorios:[...document.querySelectorAll('#acc input:checked')].map(i=>i.value)};
     e.falla=g('falla');e.diagnostico=g('diagnostico');e.recibido=g('recibido')||today();e.entrega=g('entrega');e.notas=g('notas');
     e.items=e.items.filter(i=>i.desc||+i.valor||i.servicio);e.pagos=e.pagos.filter(p=>+p.valor>0);
@@ -429,21 +438,23 @@ function vForm(o){
   };
 }
 function waBtn(o){const n=waNum(o.cliente.telefono);if(!n)return '';const s=saldo(o);
-  const msg=o.estado==='listo'?`Hola ${o.cliente.nombre}, te escribimos de ${db.settings.negocio}. Tu ${o.equipo.tipo.toLowerCase()} (orden ${o.num}) ya está listo para recoger.${s>0?' Saldo pendiente: '+money(s)+'.':''} ¡Gracias por confiar en nosotros!`
-    :`Hola ${o.cliente.nombre}, te escribimos de ${db.settings.negocio} sobre tu orden ${o.num}. Estado actual: ${ESTADOS[o.estado].t}.`;
+  const em=emisorDe(o).nombre;
+  const msg=o.estado==='listo'?`Hola ${o.cliente.nombre}, te escribimos de ${em}. Tu ${o.equipo.tipo.toLowerCase()} (orden ${o.num}) ya está listo para recoger.${s>0?' Saldo pendiente: '+money(s)+'.':''} ¡Gracias por confiar en nosotros!`
+    :`Hola ${o.cliente.nombre}, te escribimos de ${em} sobre tu orden ${o.num}. Estado actual: ${ESTADOS[o.estado].t}.`;
   return `<a class="btn btn-wa" target="_blank" rel="noopener" href="https://wa.me/${n}?text=${encodeURIComponent(msg)}"><svg><use href="#i-wa"/></svg>Avisar por WhatsApp</a>`}
 
 /* ---------- imprimir ---------- */
-function imprimir(id){const o=db.orders.find(x=>x.id===id);if(!o)return;const st=db.settings;const t=total(o),p=pagado(o);
-  $('#print').innerHTML=`<div class="p-head"><div><img src="img/nexotik-logo-claro.svg?v=2" alt="${esc(st.negocio)}"><div style="font-size:9pt;color:#4b5e82;margin-top:4px">${esc([st.nit&&'NIT '+st.nit,st.telefono&&'WhatsApp '+st.telefono,st.direccion,st.correo].filter(Boolean).join(' · '))}</div></div>
+function imprimir(id){const o=db.orders.find(x=>x.id===id);if(!o)return;const st=db.settings;const t=total(o),p=pagado(o);const em=emisorDe(o);
+  const marca=em.tipo==='persona'?`<div class="p-brand"><img src="img/nexotik-icono.svg" alt=""><div><b>${esc(em.nombre)}</b><span>Servicio técnico de computadores</span></div></div>`:`<img src="img/nexotik-logo-claro.svg?v=2" alt="${esc(em.nombre)}">`;
+  $('#print').innerHTML=`<div class="p-head"><div>${marca}<div style="font-size:9pt;color:#4b5e82;margin-top:4px">${esc([em.doc,st.telefono&&'WhatsApp '+st.telefono,st.direccion,st.correo].filter(Boolean).join(' · '))}</div></div>
     <div class="meta"><span>ORDEN DE SERVICIO</span><b>${esc(o.num)}</b>Recibido: ${fdate(o.recibido)}<br>Entrega estimada: ${fdate(o.entrega)}<br>Estado: ${ESTADOS[o.estado].t}</div></div>
-  <div class="p-box"><h4>Cliente</h4><div class="p-grid"><div><span>Nombre:</span> ${esc(o.cliente.nombre)}</div><div><span>Celular:</span> ${esc(o.cliente.telefono)}</div><div><span>Documento:</span> ${esc(o.cliente.documento||'—')}</div><div><span>Correo:</span> ${esc(o.cliente.correo||'—')}</div></div></div>
+  <div class="p-box"><h4>Cliente</h4><div class="p-grid"><div><span>Nombre:</span> ${esc(o.cliente.nombre)}</div><div><span>Celular:</span> ${esc(o.cliente.telefono)}</div><div><span>Documento:</span> ${o.cliente.documento?esc((o.cliente.docTipo||'C.C.')+' '+o.cliente.documento):'—'}</div><div><span>Correo:</span> ${esc(o.cliente.correo||'—')}</div></div></div>
   <div class="p-box"><h4>Equipo</h4><div class="p-grid"><div><span>Tipo:</span> ${esc(o.equipo.tipo)}</div><div><span>Marca y modelo:</span> ${esc([o.equipo.marca,o.equipo.modelo].filter(Boolean).join(' ')||'—')}</div><div><span>Serial:</span> ${esc(o.equipo.serial||'—')}</div><div><span>Accesorios:</span> ${esc(o.equipo.accesorios.join(', ')||'Ninguno')}</div><div style="grid-column:1/-1"><span>Estado físico:</span> ${esc(o.equipo.fisico||'Sin observaciones')}</div></div></div>
   <div class="p-box"><h4>Falla reportada</h4><div style="white-space:pre-line">${esc(o.falla)}</div>${o.diagnostico?`<h4 style="margin-top:8px">Diagnóstico</h4><div style="white-space:pre-line">${esc(o.diagnostico)}</div>`:''}</div>
   <div class="p-box"><h4>Servicios y repuestos</h4><table class="p-tbl"><thead><tr><th>Concepto</th><th>Detalle</th><th style="text-align:right">Valor</th></tr></thead><tbody>${o.items.map(i=>`<tr><td>${esc(i.servicio||i.tipo)}</td><td>${esc(i.desc)}</td><td style="text-align:right">${money(i.valor)}</td></tr>`).join('')}</tbody></table>
     <div class="p-tot"><div><span>Total</span><b>${money(t)}</b></div><div><span>Abonado</span><span>${money(p)}</span></div><div><span>Saldo</span><b>${money(t-p)}</b></div></div></div>
-  <div class="p-box"><h4>Condiciones</h4><div class="p-cond">${esc(st.condiciones.replace(/\{garantia\}/g,st.garantia))}</div></div>
-  <div class="p-sign"><div>Firma del cliente</div><div>Recibido por ${esc(st.negocio)}</div></div>`;
+  <div class="p-box"><h4>Condiciones</h4><div class="p-cond">${esc(st.condiciones.replace(/\{garantia\}/g,st.garantia).replace(/\{emisor\}/g,em.nombre).replace(/\bNexotik\b/g,em.nombre))}</div></div>
+  <div class="p-sign"><div>Firma del cliente<small>${esc(o.cliente.nombre)}</small></div><div>Recibido por<small>${esc(em.nombre)}</small></div></div>`;
   const imgs=[...document.querySelectorAll('#print img')];Promise.all(imgs.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r}))).then(()=>window.print());
 }
 
@@ -510,12 +521,18 @@ function vCuentas(){
 /* ---------- ajustes ---------- */
 function vAjustes(){const s=db.settings;
   $('#view').innerHTML=`
-  <div class="top"><div><h1>Ajustes y copias de seguridad</h1><p>Datos del negocio que salen en la orden impresa</p></div></div>
+  <div class="top"><div><h1>Ajustes y copias de seguridad</h1><p>Datos que salen en la orden impresa</p></div></div>
   <div class="grid two">
-  <form class="fs" id="fs" novalidate><h3>Datos del negocio</h3>
+  <form class="fs" id="fs" novalidate><h3>Quién emite las órdenes</h3>
     <div class="row" style="--cols:2">
       <label class="f"><span>Nombre del negocio</span><input id="s_negocio" value="${esc(s.negocio)}"></label>
-      <label class="f"><span>NIT o cédula</span><input id="s_nit" value="${esc(s.nit)}"></label>
+      <label class="f"><span>Documento del negocio</span><span style="display:grid;grid-template-columns:96px 1fr;gap:6px"><select id="s_negDocTipo" aria-label="Tipo de documento del negocio">${DOC_TIPOS.map(d=>`<option${d===s.negDocTipo?' selected':''}>${d}</option>`).join('')}</select><input id="s_nit" value="${esc(s.nit)}" aria-label="Número de documento del negocio"></span></label>
+      <label class="f"><span>Tu nombre (persona natural)</span><input id="s_persona" value="${esc(s.persona)}"></label>
+      <label class="f"><span>Tu documento</span><span style="display:grid;grid-template-columns:96px 1fr;gap:6px"><select id="s_perDocTipo" aria-label="Tipo de tu documento">${DOC_TIPOS.map(d=>`<option${d===s.perDocTipo?' selected':''}>${d}</option>`).join('')}</select><input id="s_perDoc" value="${esc(s.perDoc)}" aria-label="Número de tu documento"></span></label>
+      <label class="f" style="grid-column:1/-1"><span>Las órdenes nuevas salen por defecto a nombre de</span><select id="s_emisor"><option value="negocio"${s.emisor==='negocio'?' selected':''}>El negocio (con el logo)</option><option value="persona"${s.emisor==='persona'?' selected':''}>Mi nombre (persona natural)</option></select></label>
+    </div>
+    <h3 style="margin-top:20px">Contacto y numeración</h3>
+    <div class="row" style="--cols:2">
       <label class="f"><span>Teléfono / WhatsApp</span><input id="s_telefono" value="${esc(s.telefono)}"></label>
       <label class="f"><span>Correo</span><input id="s_correo" value="${esc(s.correo)}"></label>
       <label class="f" style="grid-column:1/-1"><span>Dirección</span><input id="s_direccion" value="${esc(s.direccion)}"></label>
@@ -533,7 +550,7 @@ function vAjustes(){const s=db.settings;
     <div class="card"><h3 style="margin-bottom:8px">Zona de peligro</h3><p style="margin:0 0 12px;color:var(--muted)">Borra todas las órdenes y gastos de este navegador. Descarga una copia antes.</p><button class="btn btn-d" type="button" data-act="wipe">Borrar todos los datos</button></div>
   </div></div>`;
   $('#fs').onsubmit=ev=>{ev.preventDefault();const g=id=>$('#s_'+id).value.trim();
-    Object.assign(db.settings,{negocio:g('negocio')||'Nexotik',nit:g('nit'),telefono:g('telefono'),correo:g('correo'),direccion:g('direccion'),prefijo:(g('prefijo')||'NX').toUpperCase(),garantia:+g('garantia')||0,siguiente:Math.max(1,+g('siguiente')||1),condiciones:$('#s_condiciones').value});
+    Object.assign(db.settings,{negocio:g('negocio')||'Nexotik',negDocTipo:g('negDocTipo'),nit:g('nit'),persona:g('persona'),perDocTipo:g('perDocTipo'),perDoc:g('perDoc'),emisor:g('emisor'),telefono:g('telefono'),correo:g('correo'),direccion:g('direccion'),prefijo:(g('prefijo')||'NX').toUpperCase(),garantia:+g('garantia')||0,siguiente:Math.max(1,+g('siguiente')||1),condiciones:$('#s_condiciones').value});
     save();toast('Ajustes guardados')};
 }
 
