@@ -229,7 +229,19 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
 .db ul{list-style:none;padding:0;margin:0 0 22px;display:grid;gap:10px}
 .db li{display:flex;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--hair)}
 .db li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--blue);margin-top:9px}
-.x{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:none;color:#fff;cursor:pointer}
+.x{position:absolute;top:14px;right:14px;z-index:2;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(6,13,31,.55);color:#fff;cursor:pointer}
+dialog.wide{width:min(980px,calc(100vw - 32px))}
+.dlg-grid{display:grid;grid-template-columns:1fr}
+dialog.wide .dlg-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.dlg-fly{background:var(--navy);display:flex;align-items:center;justify-content:center}
+.dlg-fly img{display:block;width:100%;height:auto;max-height:calc(100vh - 64px);object-fit:contain}
+.dlg-txt{display:flex;flex-direction:column;min-width:0}
+.dlg-txt .db{flex:1}
+.dlg-acts{display:flex;gap:10px;flex-wrap:wrap}
+.dlg-acts .btn-line{border-color:var(--blue);color:var(--blue)}
+.dlg-acts .btn-line:hover{background:var(--blue);color:#fff}
+@media (max-width:760px){dialog.wide .dlg-grid{grid-template-columns:1fr}.dlg-fly img{max-height:60vh}}
+.s .ver{display:inline-block;margin-top:12px;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--blue-2)}
 
 .fab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:55;width:56px;height:56px;border-radius:50%;background:var(--wa);display:grid;place-items:center;color:#04210f;box-shadow:0 12px 30px -8px rgba(37,211,102,.7)}
 .fab::before{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--wa);animation:ring 2.2s ease-out infinite}
@@ -330,7 +342,10 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
       <div class="eyebrow">Nuestros servicios</div>
       <h2>Soluciones <em>completas</em></h2>
       <p class="sub">Todo lo que tu computador, tu casa y tu negocio necesitan. Toca un servicio para ver qué incluye.</p>
-      <a class="btn btn-line" href="https://wa.me/573218757723" target="_blank" rel="noopener">Pedir un servicio <svg class="arr"><use href="#i-arrow"/></svg></a>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+        <a class="btn btn-line" href="https://wa.me/573218757723" target="_blank" rel="noopener">Pedir un servicio <svg class="arr"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-line" href="img/flyers/general.jpg" data-flyer="general">Ver volante completo <svg class="arr"><use href="#i-arrow"/></svg></a>
+      </div>
     </div>
     <div class="svc" id="svc"></div>
   </div>
@@ -392,8 +407,15 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
 
 <dialog id="dlg" aria-labelledby="dlg-t">
   <button class="x" id="dlg-x" aria-label="Cerrar">✕</button>
-  <div class="dt"><h3 id="dlg-t"></h3><p id="dlg-s"></p></div>
-  <div class="db"><ul id="dlg-l"></ul><a class="btn btn-wa" id="dlg-wa" href="https://wa.me/573218757723" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Pedir por WhatsApp</a></div>
+  <div class="dlg-grid">
+    <div class="dlg-fly" id="dlg-fly" hidden><img id="dlg-img" alt="" width="1080" height="1350"></div>
+    <div class="dlg-txt">
+      <div class="dt"><h3 id="dlg-t"></h3><p id="dlg-s"></p></div>
+      <div class="db"><ul id="dlg-l"></ul>
+        <div class="dlg-acts"><a class="btn btn-wa" id="dlg-wa" href="https://wa.me/573218757723" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Pedir por WhatsApp</a>
+        <a class="btn btn-line" id="dlg-dl" href="#" download hidden>Descargar flyer</a></div></div>
+    </div>
+  </div>
 </dialog>
 <a class="fab" href="https://wa.me/573218757723" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp al 3218757723"><svg><use href="#i-wa"/></svg></a>
 
@@ -441,18 +463,23 @@ const TIPS=[
 ];
 
 document.getElementById('svc').innerHTML=S.map(s=>`<button class="s" id="s-${s.id}" data-id="${s.id}" data-in>
-  <svg><use href="#l-${s.id}"/></svg><h3>${s.t}</h3><p>${s.s}</p></button>`).join('');
+  <svg><use href="#l-${s.id}"/></svg><h3>${s.t}</h3><p>${s.s}</p><span class="ver">Ver flyer →</span></button>`).join('');
 
 const dlg=document.getElementById('dlg');
-function openDlg(t,s,list,msg){
+function openDlg(t,s,list,msg,img){
   document.getElementById('dlg-t').textContent=t;document.getElementById('dlg-s').textContent=s;
   document.getElementById('dlg-l').innerHTML=list.map(x=>`<li>${x}</li>`).join('');
   document.getElementById('dlg-wa').href=WA+'?text='+encodeURIComponent(msg);
+  const fly=document.getElementById('dlg-fly'),im=document.getElementById('dlg-img'),dl=document.getElementById('dlg-dl');
+  if(img){im.src=img;im.alt='Flyer de Nexotik: '+t;fly.hidden=false;dl.hidden=false;dl.href=img;dl.setAttribute('download','Nexotik - '+t+'.jpg');dlg.classList.add('wide')}
+  else{fly.hidden=true;dl.hidden=true;dlg.classList.remove('wide')}
   if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');
 }
 document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-flyer="general"]');
+  if(g){e.preventDefault();openDlg('Todos nuestros servicios','Servicio técnico de computadores, cámaras WiFi y páginas web.',S.map(s=>s.t),'Hola, quiero información sobre sus servicios','img/flyers/general.jpg');return}
   const b=e.target.closest('[data-id]');
-  if(b){const s=S.find(x=>x.id===b.dataset.id);openDlg(s.t,s.s,s.d,'Hola, quiero información sobre: '+s.t);return}
+  if(b){const s=S.find(x=>x.id===b.dataset.id);openDlg(s.t,s.s,s.d,'Hola, quiero información sobre: '+s.t,'img/flyers/'+s.id+'.jpg');return}
   const tp=e.target.closest('[data-tip]');
   if(tp){const t=TIPS[+tp.dataset.tip];openDlg(t.t,t.s,t.d,'Hola, quiero información sobre: '+t.svc)}
 });
