@@ -445,7 +445,8 @@ function waBtn(o){const n=waNum(o.cliente.telefono);if(!n)return '';const s=sald
 
 /* ---------- imprimir ---------- */
 function imprimir(id){const o=db.orders.find(x=>x.id===id);if(!o)return;const st=db.settings;const t=total(o),p=pagado(o);const em=emisorDe(o);
-  const marca=em.tipo==='persona'?`<div class="p-brand"><img src="img/nexotik-icono.svg" alt=""><div><b>${esc(em.nombre)}</b><span>Servicio técnico de computadores</span></div></div>`:`<img src="img/nexotik-logo-claro.svg?v=2" alt="${esc(em.nombre)}">`;
+  const marca=`<img src="img/nexotik-logo-claro.svg?v=2" alt="${esc(st.negocio||'Nexotik')}">`+(em.tipo==='persona'?`<div style="font-weight:600;font-size:10.5pt;margin-top:4px">${esc(em.nombre)}</div>`:'');
+  const recibe=st.persona||em.nombre;
   $('#print').innerHTML=`<div class="p-head"><div>${marca}<div style="font-size:9pt;color:#4b5e82;margin-top:4px">${esc([em.doc,st.telefono&&'WhatsApp '+st.telefono,st.direccion,st.correo].filter(Boolean).join(' · '))}</div></div>
     <div class="meta"><span>ORDEN DE SERVICIO</span><b>${esc(o.num)}</b>Recibido: ${fdate(o.recibido)}<br>Entrega estimada: ${fdate(o.entrega)}<br>Estado: ${ESTADOS[o.estado].t}</div></div>
   <div class="p-box"><h4>Cliente</h4><div class="p-grid"><div><span>Nombre:</span> ${esc(o.cliente.nombre)}</div><div><span>Celular:</span> ${esc(o.cliente.telefono)}</div><div><span>Documento:</span> ${o.cliente.documento?esc((o.cliente.docTipo||'C.C.')+' '+o.cliente.documento):'—'}</div><div><span>Correo:</span> ${esc(o.cliente.correo||'—')}</div></div></div>
@@ -454,7 +455,7 @@ function imprimir(id){const o=db.orders.find(x=>x.id===id);if(!o)return;const st
   <div class="p-box"><h4>Servicios y repuestos</h4><table class="p-tbl"><thead><tr><th>Concepto</th><th>Detalle</th><th style="text-align:right">Valor</th></tr></thead><tbody>${o.items.map(i=>`<tr><td>${esc(i.servicio||i.tipo)}</td><td>${esc(i.desc)}</td><td style="text-align:right">${money(i.valor)}</td></tr>`).join('')}</tbody></table>
     <div class="p-tot"><div><span>Total</span><b>${money(t)}</b></div><div><span>Abonado</span><span>${money(p)}</span></div><div><span>Saldo</span><b>${money(t-p)}</b></div></div></div>
   <div class="p-box"><h4>Condiciones</h4><div class="p-cond">${esc(st.condiciones.replace(/\{garantia\}/g,st.garantia).replace(/\{emisor\}/g,em.nombre).replace(/\bNexotik\b/g,em.nombre))}</div></div>
-  <div class="p-sign"><div>Firma del cliente<small>${esc(o.cliente.nombre)}</small></div><div>Recibido por<small>${esc(em.nombre)}</small></div></div>`;
+  <div class="p-sign"><div>Firma del cliente<small>${esc(o.cliente.nombre)}</small></div><div>Recibido por<small>${esc(recibe)}</small></div></div>`;
   const imgs=[...document.querySelectorAll('#print img')];Promise.all(imgs.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r}))).then(()=>window.print());
 }
 
