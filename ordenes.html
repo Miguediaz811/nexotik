@@ -35,6 +35,8 @@ aside .logo img{display:block;width:100%;max-width:200px;height:auto}
 .menu a svg{width:18px;height:18px;flex:none}
 .menu a:hover{background:var(--navy-2);color:#fff}
 .menu a.on{background:var(--blue);color:#fff}
+.menu a.web{margin-top:10px;border-top:1px solid var(--line-d);border-radius:0 0 8px 8px;padding-top:14px;color:#93a4cc}
+.menu a.web:hover{color:#fff}
 .side-foot{margin-top:auto;font-size:.78rem;color:#93a4cc}
 .side-foot b{color:#e9efff;font-weight:500}
 main{min-width:0;padding:26px max(16px,3vw) 60px}
@@ -44,12 +46,15 @@ main{min-width:0;padding:26px max(16px,3vw) 60px}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
   aside{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;padding:10px 12px;z-index:20;gap:10px;overflow-x:auto}
-  aside .logo img{width:120px}
+  aside .logo img{width:104px}
+  .menu{gap:2px}
   .menu{flex-direction:row}
-  .menu a{padding:8px 10px;white-space:nowrap}
+  .menu a{padding:8px 9px;white-space:nowrap}
   .menu a span{display:none}
+  .menu a.web{margin:0 0 0 4px;border-top:0;border-left:1px solid var(--line-d);border-radius:0 8px 8px 0;padding:8px 8px 8px 12px}
   .side-foot{display:none}
 }
+@media (max-width:380px){aside .logo img{width:88px}}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:8px;padding:9px 16px;font:500 .9rem var(--body);cursor:pointer;text-decoration:none;transition:background .2s,border-color .2s,transform .15s;background:var(--card);color:var(--ink);border-color:var(--hair)}
 .btn:hover{border-color:var(--blue)}
@@ -232,6 +237,7 @@ dialog .acts{display:flex;gap:10px;justify-content:flex-end}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-back" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 6 4 12l6 6M4 12h11a5 5 0 0 1 5 5v1"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></symbol>
 <symbol id="i-list" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
@@ -255,6 +261,7 @@ dialog .acts{display:flex;gap:10px;justify-content:flex-end}
       <a href="#nueva" data-v="nueva"><svg><use href="#i-plus"/></svg><span>Nueva orden</span></a>
       <a href="#cuentas" data-v="cuentas"><svg><use href="#i-chart"/></svg><span>Cuentas</span></a>
       <a href="#ajustes" data-v="ajustes"><svg><use href="#i-gear"/></svg><span>Ajustes y copias</span></a>
+      <a class="web" href="index.html" title="Ir a la página web" aria-label="Ir a la página web"><svg><use href="#i-back"/></svg><span>Ir a la página web</span></a>
     </nav>
     <div class="side-foot" id="sideFoot"></div>
   </aside>
