@@ -552,9 +552,10 @@ async function pdfOrden(o){if(generando)return;generando=true;toast('Generando P
     while(y<cv.height-2){const h=Math.min(altoPag,cv.height-y);const c=document.createElement('canvas');c.width=cv.width;c.height=h;
       const cx=c.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,c.width,h);cx.drawImage(cv,0,y,cv.width,h,0,0,cv.width,h);
       if(pag)pdf.addPage();pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,pw,ph*h/altoPag);y+=altoPag;pag++}
-    const nom=('Orden '+o.num+' - '+(o.cliente.nombre||'')).replace(/[\\/:*?"<>|]+/g,'').trim();
-    pdf.setProperties({title:'Orden de servicio '+o.num});
-    if(w&&!w.closed){const url=URL.createObjectURL(pdf.output('blob'));w.location.href=url;setTimeout(()=>URL.revokeObjectURL(url),10*60*1000);toast('Orden '+o.num+' abierta en el visor de PDF')}
+    const nom=('Orden '+o.num).replace(/[\\/:*?"<>|]+/g,'').trim();
+    pdf.setProperties({title:nom});pdf.viewerPreferences({DisplayDocTitle:true});
+    if(w&&!w.closed){const url=URL.createObjectURL(pdf.output('blob'));
+      w.document.open();w.document.write('<!doctype html><meta charset=utf-8><title>'+esc(nom)+'</title><style>html,body{margin:0;height:100%;background:#525659}iframe{border:0;width:100%;height:100%;display:block}</style><iframe src="'+url+'" title="'+esc(nom)+'"></iframe>');w.document.close();setTimeout(()=>URL.revokeObjectURL(url),10*60*1000);toast('Orden '+o.num+' abierta en el visor de PDF')}
     else{pdf.save(nom+'.pdf');toast('PDF descargado: '+nom+'.pdf')}
   }catch(e){console.error(e);if(w&&!w.closed)w.close();toast('No se pudo generar el PDF. Revisa tu conexión.')}
   finally{hoja.remove();generando=false}}
