@@ -211,6 +211,7 @@ dialog .acts{display:flex;gap:10px;justify-content:flex-end}
   .app,dialog,.toast,.gate{display:none!important}
   #print{display:block;color:#0b1733;font:11pt/1.45 var(--body);padding:12mm 14mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+.pdf-page{position:fixed;left:-10000px;top:0;width:816px;min-height:1056px;background:#fff;color:#0b1733;font:11pt/1.45 var(--body);padding:12mm 14mm}
 .p-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid #1f7bff;padding-bottom:10px;margin-bottom:12px}
 .p-head img{height:64px}
 .p-head .meta{text-align:right;font-size:9.5pt;margin-left:auto}
@@ -430,7 +431,7 @@ function vOrdenes(){
     $('#tb').innerHTML=rows.length?rows.map(o=>{const s=saldo(o);return `<tr data-open="${o.id}"><td class="num"><b>${esc(o.num)}</b></td><td class="num">${fdate(o.recibido)}</td>
       <td class="cli"><b>${esc(o.cliente.nombre)}</b><span>${esc(o.cliente.telefono)}</span></td><td>${esc(o.equipo.tipo)}<br><span style="color:var(--muted);font-size:.82rem">${esc([o.equipo.marca,o.equipo.modelo].filter(Boolean).join(' '))}</span></td>
       <td>${pill(o.estado)}</td><td class="r num">${money(total(o))}</td><td class="r num ${s>0?'saldo-pend':'saldo-ok'}">${s>0?money(s):'Pagado'}</td>
-      <td class="r"><button class="btn btn-i btn-sm" type="button" data-print="${o.id}" title="Imprimir orden" aria-label="Imprimir orden ${esc(o.num)}"><svg><use href="#i-print"/></svg></button></td></tr>`}).join('')
+      <td class="r"><button class="btn btn-i btn-sm" type="button" data-print="${o.id}" title="Descargar PDF para imprimir" aria-label="Descargar PDF de la orden ${esc(o.num)}"><svg><use href="#i-print"/></svg></button></td></tr>`}).join('')
       :`<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px;cursor:default">No hay órdenes con ese filtro.</td></tr>`;
   };
   draw();
@@ -445,7 +446,7 @@ function vForm(o){
   const opt=(arr,v)=>arr.map(x=>`<option${x===v?' selected':''}>${esc(x)}</option>`).join('');
   $('#view').innerHTML=`
   <div class="top"><div><h1>${isNew?'Nueva orden de servicio':'Orden '+esc(e.num)}</h1><p>${isNew?'Llena los datos al recibir el equipo. Los campos con * son obligatorios.':'Creada el '+fdate(e.creado.slice(0,10))+(e.codigo?` · Código para el cliente: <span class="codigo">${esc(e.codigo)}</span> · <a href="${esc(urlSeguimiento(e))}" target="_blank" rel="noopener">ver lo que ve el cliente</a>`:'')}</p></div>
-  ${isNew?'':`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-print="${e.id}"><svg><use href="#i-print"/></svg>Imprimir</button>${waBtn(e)}</div>`}</div>
+  ${isNew?'':`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-print="${e.id}"><svg><use href="#i-print"/></svg>Imprimir PDF</button>${waBtn(e)}</div>`}</div>
   <form class="form" id="fo" novalidate>
     <div class="fs"><h3><i>1</i>Estado del trabajo</h3><div class="status-pick" id="sp">${Object.entries(ESTADOS).map(([k,s])=>`<button type="button" data-s="${k}" style="--c:${s.c}" aria-pressed="${e.estado===k}">${s.t}</button>`).join('')}</div>
       <div class="row" style="--cols:3;margin-top:14px"><label class="f"><span>Orden a nombre de</span><select id="emisor"><option value="negocio"${(e.emisor||db.settings.emisor)==='negocio'?' selected':''}>${esc(db.settings.negocio||'Nexotik')} (negocio)</option><option value="persona"${(e.emisor||db.settings.emisor)==='persona'?' selected':''}>${esc(db.settings.persona||'Mi nombre')} (persona natural)</option></select></label></div></div>
@@ -532,10 +533,32 @@ function waBtn(o){const n=waNum(o.cliente.telefono);if(!n)return '';const s=sald
 
 /* ---------- imprimir ---------- */
 function qrSvg(t){try{const q=qrcode(0,'M');q.addData(t);q.make();return q.createSvgTag({cellSize:4,margin:0,scalable:true})}catch(e){return ''}}
+function cargarScript(src){return new Promise((ok,no)=>{if(document.querySelector(`script[src="${src}"]`))return ok();const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+let generando=false;
+async function pdfOrden(o){if(generando)return;generando=true;toast('Generando PDF…');
+  const hoja=document.createElement('div');hoja.className='pdf-page';hoja.innerHTML=$('#print').innerHTML;document.body.appendChild(hoja);
+  hoja.querySelectorAll('img[src*="nexotik-logo-claro.svg"]').forEach(i=>i.src='img/nexotik-logo-claro.png');
+  try{
+    await Promise.all([cargarScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'),cargarScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js')]);
+    await Promise.all([...hoja.querySelectorAll('img')].map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r})));
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const W=816,H=1056,esc_=3;
+    const cv=await html2canvas(hoja,{scale:esc_,backgroundColor:'#ffffff',width:W,windowWidth:W,useCORS:true,logging:false});
+    const pdf=new window.jspdf.jsPDF({unit:'pt',format:'letter',orientation:'portrait',compress:true});
+    const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+    const altoPag=H*esc_;let y=0,pag=0;
+    while(y<cv.height-2){const h=Math.min(altoPag,cv.height-y);const c=document.createElement('canvas');c.width=cv.width;c.height=h;
+      const cx=c.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,c.width,h);cx.drawImage(cv,0,y,cv.width,h,0,0,cv.width,h);
+      if(pag)pdf.addPage();pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,pw,ph*h/altoPag);y+=altoPag;pag++}
+    const nom=('Orden '+o.num+' - '+(o.cliente.nombre||'')).replace(/[\\/:*?"<>|]+/g,'').trim();
+    pdf.setProperties({title:'Orden de servicio '+o.num});
+    pdf.save(nom+'.pdf');toast('PDF descargado: '+nom+'.pdf');
+  }catch(e){console.error(e);toast('No se pudo generar el PDF. Revisa tu conexión.')}
+  finally{hoja.remove();generando=false}}
 function imprimir(id){const o=db.orders.find(x=>x.id===id);if(!o)return;if(!o.codigo){o.codigo=nuevoCodigo();save()}const st=db.settings;const t=total(o),p=pagado(o);const em=emisorDe(o);
   const marca=`<img src="img/nexotik-logo-claro.svg?v=2" alt="${esc(st.negocio||'Nexotik')}">`+(em.tipo==='persona'?`<div style="font-weight:600;font-size:10.5pt;margin-top:4px">${esc(em.nombre)}</div>`:'');
   const recibe=st.persona||em.nombre;
-  $('#print').innerHTML=`<div class="p-head"><div>${marca}<div style="font-size:9pt;color:#4b5e82;margin-top:4px">${esc([em.doc,st.telefono&&'WhatsApp '+st.telefono,st.direccion,st.correo].filter(Boolean).join(' · '))}</div></div>
+  $('#print').innerHTML=`<div class="p-head"><div>${marca}${em.doc?`<div style="font-size:10pt;font-weight:600;color:#0b1733;margin-top:4px">${esc(em.doc)}</div>`:''}<div style="font-size:9pt;color:#4b5e82;margin-top:2px">${esc([st.telefono&&'WhatsApp '+st.telefono,st.direccion,st.correo].filter(Boolean).join(' · '))}</div></div>
     <div class="p-qr">${qrSvg(urlSeguimiento(o))}<span>Sigue tu orden<br>Código: <b>${esc(o.codigo)}</b></span></div>
     <div class="meta"><span>ORDEN DE SERVICIO</span><b>${esc(o.num)}</b>Recibido: ${fdate(o.recibido)}<br>Entrega estimada: ${fdate(o.entrega)}<br>Estado: ${ESTADOS[o.estado].t}</div></div>
   <div class="p-box"><h4>Cliente</h4><div class="p-grid"><div><span>Nombre:</span> ${esc(o.cliente.nombre)}</div><div><span>Celular:</span> ${esc(o.cliente.telefono)}</div><div><span>Documento:</span> ${o.cliente.documento?esc((o.cliente.docTipo||'C.C.')+' '+o.cliente.documento):'—'}</div><div><span>Correo:</span> ${esc(o.cliente.correo||'—')}</div></div></div>
@@ -545,7 +568,8 @@ function imprimir(id){const o=db.orders.find(x=>x.id===id);if(!o)return;if(!o.co
     <div class="p-tot"><div><span>Total</span><b>${money(t)}</b></div><div><span>Abonado</span><span>${money(p)}</span></div><div><span>Saldo</span><b>${money(t-p)}</b></div></div></div>
   <div class="p-box"><h4>Condiciones</h4><div class="p-cond">${esc(st.condiciones.replace(/\{garantia\}/g,st.garantia).replace(/\{emisor\}/g,em.nombre).replace(/\bNexotik\b/g,em.nombre))}</div></div>
   <div class="p-sign"><div>Firma del cliente<small>${esc(o.cliente.nombre)}</small></div><div>Recibido por<small>${esc(recibe)}</small></div></div>`;
-  const imgs=[...document.querySelectorAll('#print img')];Promise.all(imgs.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r}))).then(()=>window.print());
+  if(!em.doc)toast(em.tipo==='persona'?'Falta tu documento: agrégalo en Ajustes':'Falta el NIT: agrégalo en Ajustes');
+  pdfOrden(o);
 }
 
 /* ---------- gráfico de dona ---------- */
