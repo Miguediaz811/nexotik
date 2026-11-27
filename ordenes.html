@@ -300,7 +300,8 @@ async function cargar(){
   return {vacia:!o.length&&!g.length&&!a.data};
 }
 function setSync(e){estadoSync=e;const el=document.getElementById('syncSt');if(el){const m={ok:['#16a34a','Guardado en la nube'],guardando:['#d97706','Guardando…'],error:['#dc2626','Sin guardar: sin conexión']}[e];el.style.setProperty('--c',m[0]);el.textContent=m[1]}}
-function save(){if(!sb||!listo)return true;if(syncing){again=true;return true}
+function save(){if(!sb){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){toast('No se pudo guardar en este navegador');return false}}
+  if(!listo)return true;if(syncing){again=true;return true}
   syncing=sync().finally(()=>{syncing=null;if(again){again=false;save()}});return true}
 async function sync(){
   clearTimeout(reintento);
@@ -366,7 +367,9 @@ function route(){
   vPanel();
 }
 addEventListener('hashchange',route);
-function sideFoot(){const lb=db.lastBackup;$('#sideFoot').innerHTML=`<span class="sync" id="syncSt"></span><br>Última copia: <b>${lb?fdate(lb.slice(0,10)):'nunca'}</b><br><button class="salir" type="button" data-act="salir">Cerrar sesión</button>`;setSync(estadoSync)}
+function sideFoot(){const lb=db.lastBackup;const ult=`Última copia: <b>${lb?fdate(lb.slice(0,10)):'nunca'}</b>`;
+  if(!sb){$('#sideFoot').innerHTML=`Datos guardados en este navegador.<br>${ult}`;return}
+  $('#sideFoot').innerHTML=`<span class="sync" id="syncSt"></span><br>${ult}<br><button class="salir" type="button" data-act="salir">Cerrar sesión</button>`;setSync(estadoSync)}
 
 /* ---------- panel ---------- */
 function vPanel(){
@@ -394,7 +397,7 @@ function vPanel(){
     </div>
   </div>`;
 }
-function emptyBox(){return `<div class="card empty" style="margin-bottom:16px"><svg><use href="#i-box"/></svg><h3>Todavía no hay órdenes</h3><p>Crea tu primera orden de servicio cuando recibas un equipo. Todo se guarda en la nube.</p>
+function emptyBox(){return `<div class="card empty" style="margin-bottom:16px"><svg><use href="#i-box"/></svg><h3>Todavía no hay órdenes</h3><p>Crea tu primera orden de servicio cuando recibas un equipo. Todo se guarda ${sb?'en la nube':'en este navegador'}.</p>
   <div class="acts"><a class="btn btn-p" href="#nueva"><svg><use href="#i-plus"/></svg>Crear la primera orden</a><button class="btn" data-act="demo" type="button">Ver con datos de ejemplo</button><button class="btn" data-act="import" type="button"><svg><use href="#i-up"/></svg>Restaurar una copia</button></div></div>`}
 
 /* ---------- lista ---------- */
@@ -617,11 +620,11 @@ function vAjustes(){const s=db.settings;
     </div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-p" type="submit">Guardar ajustes</button></div></form>
   <div class="grid" style="align-content:start">
     <div class="card"><h3 style="margin-bottom:8px">Copias de seguridad</h3>
-      <p class="note" style="margin:0 0 14px">Tus órdenes se guardan <b>en la nube</b> y puedes entrar desde cualquier computador o celular. Igual conviene descargar una copia cada mes y guardarla en Google Drive o en una memoria.</p>
+      <p class="note" style="margin:0 0 14px">${sb?'Tus órdenes se guardan <b>en la nube</b> y puedes entrar desde cualquier computador o celular. Igual conviene descargar una copia cada mes y guardarla en Google Drive o en una memoria.':'Tus órdenes se guardan <b>solo en este navegador</b>. Si borras el historial, cambias de computador o se daña el equipo, se pierden. Descarga una copia cada semana y guárdala en Google Drive o en una memoria.'}</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-p" type="button" data-act="backup"><svg><use href="#i-down"/></svg>Descargar copia</button><button class="btn" type="button" data-act="import"><svg><use href="#i-up"/></svg>Restaurar copia</button></div>
       <p style="margin:12px 0 0;color:var(--muted);font-size:.85rem">Última copia: <b>${db.lastBackup?fdate(db.lastBackup.slice(0,10)):'nunca'}</b> · ${db.orders.length} órdenes · ${db.expenses.length} gastos</p></div>
     <div class="card"><h3 style="margin-bottom:8px">Exportar</h3><p style="margin:0 0 12px;color:var(--muted)">Descarga tus órdenes en una tabla para abrir en Excel o Google Sheets.</p><button class="btn" type="button" data-act="csv"><svg><use href="#i-down"/></svg>Exportar a Excel (CSV)</button></div>
-    <div class="card"><h3 style="margin-bottom:8px">Zona de peligro</h3><p style="margin:0 0 12px;color:var(--muted)">Borra todas las órdenes y gastos de la nube. Descarga una copia antes.</p><button class="btn btn-d" type="button" data-act="wipe">Borrar todos los datos</button></div>
+    <div class="card"><h3 style="margin-bottom:8px">Zona de peligro</h3><p style="margin:0 0 12px;color:var(--muted)">Borra todas las órdenes y gastos ${sb?'de la nube':'de este navegador'}. Descarga una copia antes.</p><button class="btn btn-d" type="button" data-act="wipe">Borrar todos los datos</button></div>
   </div></div>`;
   $('#fs').onsubmit=ev=>{ev.preventDefault();const g=id=>$('#s_'+id).value.trim();
     Object.assign(db.settings,{negocio:g('negocio')||'Nexotik',negDocTipo:g('negDocTipo'),nit:g('nit'),persona:g('persona'),perDocTipo:g('perDocTipo'),perDoc:g('perDoc'),emisor:g('emisor'),telefono:g('telefono'),correo:g('correo'),direccion:g('direccion'),prefijo:(g('prefijo')||'NX').toUpperCase(),garantia:+g('garantia')||0,siguiente:Math.max(1,+g('siguiente')||1),condiciones:$('#s_condiciones').value});
@@ -631,7 +634,7 @@ function vAjustes(){const s=db.settings;
 /* ---------- copias, CSV, ejemplo ---------- */
 function backup(){db.lastBackup=new Date().toISOString();save();download(`nexotik-copia-${today()}.json`,JSON.stringify({app:'nexotik-ordenes',version:1,fecha:db.lastBackup,data:db},null,1),'application/json');toast('Copia descargada');sideFoot();if(location.hash==='#ajustes')vAjustes()}
 async function restore(file){try{const j=JSON.parse(await file.text());const d=j.data||j;if(!Array.isArray(d.orders))throw 0;
-    if(!await confirmar('¿Restaurar esta copia?',`La copia tiene ${d.orders.length} órdenes y ${(d.expenses||[]).length} gastos. Reemplazará todos los datos actuales en la nube.`,'Restaurar'))return;
+    if(!await confirmar('¿Restaurar esta copia?',`La copia tiene ${d.orders.length} órdenes y ${(d.expenses||[]).length} gastos. Reemplazará todos los datos actuales ${sb?'en la nube':'de este navegador'}.`,'Restaurar'))return;
     db=Object.assign(defaults(),d);db.settings=Object.assign(defaults().settings,d.settings);save();toast('Copia restaurada');sideFoot();route()}
   catch(e){toast('Ese archivo no es una copia válida de Nexotik')}}
 function csv(){const H=['Orden','Recibido','Entrega','Estado','Cliente','Celular','Documento','Equipo','Marca','Modelo','Serial','Falla','Servicios','Total','Pagado','Saldo'];
@@ -661,7 +664,7 @@ document.addEventListener('click',async e=>{
   if(k==='import')$('#fileIn').click();
   if(k==='csv')csv();
   if(k==='demo')demo();
-  if(k==='wipe'&&await confirmar('¿Borrar todos los datos?','Se eliminarán todas las órdenes y gastos de la nube. Esto no se puede deshacer.','Borrar todo')){const s=db.settings;db=defaults();db.settings=s;db.settings.siguiente=1;save();toast('Datos borrados');sideFoot();route()}
+  if(k==='wipe'&&await confirmar('¿Borrar todos los datos?','Se eliminarán todas las órdenes y gastos '+(sb?'de la nube':'de este navegador')+'. Esto no se puede deshacer.','Borrar todo')){const s=db.settings;db=defaults();db.settings=s;db.settings.siguiente=1;save();toast('Datos borrados');sideFoot();route()}
 });
 $('#fileIn').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)restore(f)};
 addEventListener('beforeunload',e=>{if(listo&&(syncing||estadoSync!=='ok')){e.preventDefault();e.returnValue=''}});
@@ -703,7 +706,9 @@ async function entrar(){esperando('Cargando tus órdenes…');
   gate.hidden=true;sideFoot();route();
   if(syncing){await syncing;if(estadoSync==='ok'&&db.orders.length)toast('Órdenes guardadas en la nube')}}
 (async()=>{
-  if(!sb)return pantallaLogin();
+  if(!sb){/* sin Supabase configurado: funciona como antes, guardando en este navegador */
+    try{const r=localStorage.getItem(KEY);if(r){db=Object.assign(defaults(),JSON.parse(r));db.settings=Object.assign(defaults().settings,db.settings)}}catch(e){}
+    listo=true;gate.hidden=true;sideFoot();route();return}
   const {data}=await sb.auth.getSession();
   if(data.session)entrar();else pantallaLogin();
   sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&listo)location.reload()});
