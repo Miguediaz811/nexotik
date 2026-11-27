@@ -149,6 +149,7 @@ const TEXTO={
 };
 $('#anio').textContent=new Date().getFullYear();
 
+function haySesion(){try{const ref=new URL(CFG.url).hostname.split('.')[0];return !!localStorage.getItem('sb-'+ref+'-auth-token')}catch(e){return false}}
 function mostrarError(t){const m=$('#msg');m.textContent=t;m.hidden=!t}
 
 async function consultar(num,cod){
@@ -188,6 +189,7 @@ function pintar(o){
     ${cancel?'':`<ol class="steps" style="--k:${Math.max(0,idx)/(PASOS.length-1)}"><span class="fill"></span>${PASOS.map((p,i)=>`<li class="${i<=idx?'done':''} ${i===idx?'now':''}" ${i===idx?'aria-current="step"':''}><i>${i<idx?'✓':i+1}</i><b>${p[1]}</b></li>`).join('')}</ol>`}
     <div class="note ${cancel?'off':est==='listo'||est==='entregado'?'ok':''}">${TEXTO[est]||''}</div>
     ${gar}
+    ${haySesion()?`<div class="acts"><a class="btn" href="ordenes.html#abrir:${encodeURIComponent(o.num)}">Abrir en el sistema de órdenes →</a></div>`:''}
   </div>
   <div class="card">
     <h3>Detalles</h3>

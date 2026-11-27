@@ -45,7 +45,7 @@ main{min-width:0;padding:26px max(16px,3vw) 60px}
 .top h1{font-size:1.8rem}
 .top p{margin:2px 0 0;color:var(--muted)}
 @media (max-width:860px){
-  .app{grid-template-columns:1fr}
+  .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
   aside{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;padding:10px 12px;z-index:20;gap:10px;overflow-x:auto}
   aside .logo img{width:104px}
   .menu{gap:2px}
@@ -180,6 +180,12 @@ dialog .in{padding:22px}
 dialog h3{font-size:1.15rem;margin-bottom:8px}
 dialog p{margin:0 0 18px;color:var(--muted)}
 dialog .acts{display:flex;gap:10px;justify-content:flex-end}
+#scanDlg{width:min(480px,calc(100vw - 24px))}
+.scan-box{position:relative;aspect-ratio:1;background:#000;border-radius:12px;overflow:hidden;margin-bottom:12px}
+.scan-box video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-box::after{content:"";position:absolute;inset:18%;border:3px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.scan-msg{min-height:1.5em;margin:0 0 14px!important;font-size:.9rem}
+.scan-msg.bad{color:var(--bad)!important}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,calc(100% + 40px));visibility:hidden;background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;font-weight:500;transition:transform .35s cubic-bezier(.2,.9,.25,1),visibility 0s .35s;z-index:80;pointer-events:none}
 .toast.show{transform:translate(-50%,0);visibility:visible;transition:transform .35s cubic-bezier(.2,.9,.25,1)}
 .note{font-size:.82rem;color:var(--muted);background:var(--card-2);border-radius:10px;padding:10px 12px}
@@ -241,6 +247,7 @@ dialog .acts{display:flex;gap:10px;justify-content:flex-end}
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-back" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 6 4 12l6 6M4 12h11a5 5 0 0 1 5 5v1"/></symbol>
+<symbol id="i-qr" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M14 14h2v2M20 14v.01M14 20h2M18 18h2v2M18 14v2"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></symbol>
 <symbol id="i-list" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
@@ -272,6 +279,10 @@ dialog .acts{display:flex;gap:10px;justify-content:flex-end}
 </div>
 
 <div id="print"></div>
+<dialog id="scanDlg" aria-labelledby="scanT"><div class="in"><h3 id="scanT">Escanear QR de una orden</h3>
+  <div class="scan-box"><video id="scanVid" playsinline muted></video></div>
+  <p class="scan-msg" id="scanMsg" role="status">Apunta la cámara al código QR de la orden impresa.</p>
+  <div class="acts"><button class="btn" type="button" id="scanNo">Cancelar</button></div></div></dialog>
 <div class="gate" id="gate"><div class="box" id="gateBox"><div class="wait"><i></i>Cargando…</div></div></div>
 <dialog id="dlg"><div class="in"><h3 id="dlgT"></h3><p id="dlgP"></p><div class="acts"><button class="btn" id="dlgNo" type="button">Cancelar</button><button class="btn btn-d" id="dlgYes" type="button">Confirmar</button></div></div></dialog>
 <div class="toast" id="toast" role="status"></div>
@@ -366,7 +377,10 @@ function download(name,text,type){const b=new Blob([text],{type});const a=docume
 let editing=null;
 function route(){
   if(!listo)return;
-  const h=(location.hash||'#panel').slice(1);const [v,id]=h.split('-');
+  const h=decodeURIComponent((location.hash||'#panel').slice(1));
+  if(h.startsWith('abrir:')){const n=h.slice(6).trim().toUpperCase();const o=db.orders.find(x=>String(x.num).toUpperCase()===n);
+    if(o){location.replace('#orden-'+o.id);return}toast('No se encontró la orden '+n);location.replace('#ordenes');return}
+  const [v,id]=h.split('-');
   document.querySelectorAll('.menu a').forEach(a=>a.classList.toggle('on',a.dataset.v===(v==='orden'?'ordenes':v)));
   window.scrollTo(0,0);
   if(v==='ordenes')return vOrdenes();
@@ -414,7 +428,7 @@ function emptyBox(){return `<div class="card empty" style="margin-bottom:16px"><
 let fEstado='abiertas',fTexto='';
 function vOrdenes(){
   $('#view').innerHTML=`
-  <div class="top"><div><h1>Órdenes de servicio</h1><p>${db.orders.length} órdenes en total</p></div><a class="btn btn-p" href="#nueva"><svg><use href="#i-plus"/></svg>Nueva orden</a></div>
+  <div class="top"><div><h1>Órdenes de servicio</h1><p>${db.orders.length} órdenes en total</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-act="scan"><svg><use href="#i-qr"/></svg>Escanear QR</button><a class="btn btn-p" href="#nueva"><svg><use href="#i-plus"/></svg>Nueva orden</a></div></div>
   ${db.orders.length?'':emptyBox()}
   <div class="filters"><input id="q" type="search" placeholder="Buscar por cliente, teléfono, número, equipo o serial" value="${esc(fTexto)}">
   <div class="chips" id="fe">${[['abiertas','Abiertas'],['todas','Todas'],...Object.entries(ESTADOS).map(([k,e])=>[k,e.t])].map(([k,t])=>`<button class="chip" type="button" data-f="${k}" aria-pressed="${fEstado===k}">${t}</button>`).join('')}</div></div>
@@ -526,6 +540,35 @@ function waBtn(o){const n=waNum(o.cliente.telefono);if(!n)return '';const s=sald
   const msg=o.estado==='listo'?`Hola ${o.cliente.nombre}, te escribimos de ${em}. Tu ${o.equipo.tipo.toLowerCase()} (orden ${o.num}) ya está listo para recoger.${s>0?' Saldo pendiente: '+money(s)+'.':''} ¡Gracias por confiar en nosotros!${seg}`
     :`Hola ${o.cliente.nombre}, te escribimos de ${em} sobre tu orden ${o.num}. Estado actual: ${ESTADOS[o.estado].t}.${seg}`;
   return `<a class="btn btn-wa" target="_blank" rel="noopener" href="https://wa.me/${n}?text=${encodeURIComponent(msg)}"><svg><use href="#i-wa"/></svg>Avisar por WhatsApp</a>`}
+
+/* ---------- escanear QR ---------- */
+let scanStream=null,scanRAF=0;
+function cargarJsQR(){if(window.jsQR)return Promise.resolve();return new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}
+function leerQR(t){t=String(t||'').trim();let n='',c='';
+  try{const u=new URL(t);n=u.searchParams.get('n')||'';c=u.searchParams.get('c')||''}catch(e){n=t}
+  return {n:n.trim().toUpperCase(),c:c.trim().toUpperCase()}}
+function pararScan(){cancelAnimationFrame(scanRAF);if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}const v=$('#scanVid');if(v)v.srcObject=null}
+async function escanear(){const d=$('#scanDlg'),msg=$('#scanMsg'),vid=$('#scanVid');
+  const decir=(t,bad)=>{msg.textContent=t;msg.classList.toggle('bad',!!bad)};
+  decir('Abriendo la cámara…');d.showModal();
+  const cerrar=()=>{pararScan();if(d.open)d.close()};$('#scanNo').onclick=cerrar;d.oncancel=e=>{e.preventDefault();cerrar()};
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){decir('Este navegador no permite usar la cámara aquí. Busca la orden por su número.',true);return}
+  try{await cargarJsQR()}catch(e){decir('No se pudo cargar el lector de QR. Revisa tu internet.',true);return}
+  try{scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false})}
+  catch(e){decir(e&&e.name==='NotAllowedError'?'No diste permiso para usar la cámara. Actívalo en la configuración del navegador.':'No se encontró una cámara disponible.',true);return}
+  if(!d.open){pararScan();return}
+  vid.srcObject=scanStream;try{await vid.play()}catch(e){}
+  decir('Apunta la cámara al código QR de la orden impresa.');
+  const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});let pausa=0;
+  const paso=()=>{if(!scanStream)return;scanRAF=requestAnimationFrame(paso);
+    if(vid.readyState<2||performance.now()<pausa)return;
+    const k=Math.min(1,640/Math.max(vid.videoWidth,vid.videoHeight));cv.width=vid.videoWidth*k|0;cv.height=vid.videoHeight*k|0;if(!cv.width)return;
+    cx.drawImage(vid,0,0,cv.width,cv.height);const img=cx.getImageData(0,0,cv.width,cv.height);
+    const r=window.jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});if(!r||!r.data)return;
+    const {n,c}=leerQR(r.data);const o=db.orders.find(x=>String(x.num).toUpperCase()===n);
+    if(o&&(!c||!o.codigo||String(o.codigo).toUpperCase()===c)){cerrar();if(navigator.vibrate)navigator.vibrate(80);toast('Orden '+o.num);location.hash='#orden-'+o.id;return}
+    decir(n?'La orden '+n+' no está en el sistema o el código no coincide.':'Ese QR no es de una orden de Nexotik.',true);pausa=performance.now()+1500};
+  paso()}
 
 /* ---------- imprimir ---------- */
 function qrSvg(t){try{const q=qrcode(0,'M');q.addData(t);q.make();return q.createSvgTag({cellSize:4,margin:0,scalable:true})}catch(e){return ''}}
@@ -675,6 +718,7 @@ document.addEventListener('click',async e=>{
   const dg=e.target.closest('[data-delg]');if(dg){if(await confirmar('¿Eliminar este gasto?','Se quitará de las cuentas.','Eliminar')){db.expenses=db.expenses.filter(g=>g.id!==dg.dataset.delg);save();vCuentas()}return}
   const a=e.target.closest('[data-act]');if(!a)return;const k=a.dataset.act;
   if(k==='salir'){if(estadoSync!=='ok'&&!await confirmar('Hay cambios sin guardar','Si cierras sesión ahora se perderán los cambios que no alcanzaron a subir.','Cerrar sesión'))return;await sb.auth.signOut();location.hash='';location.reload();return}
+  if(k==='scan')return escanear();
   if(k==='backup')backup();
   if(k==='import')$('#fileIn').click();
   if(k==='csv')csv();
