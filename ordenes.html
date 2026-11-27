@@ -693,22 +693,28 @@ function pantallaLogin(msg){gate.hidden=false;gbox.style.background='';gbox.styl
     const r=await sb.auth.signInWithPassword({email:m,password:pw});
     if(r.error){b.disabled=false;b.textContent='Entrar';$('#l_err').textContent=/invalid/i.test(r.error.message)?'Correo o contraseña incorrectos.':'No se pudo entrar. Revisa tu conexión.';return}
     entrar()}}
-async function migrar(){let viejo=null;try{viejo=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
-  if(!viejo||localStorage.getItem(KEY+'-migrado'))return false;
-  const no=(viejo.orders||[]).length,ng=(viejo.expenses||[]).length;
+async function migrar(vacia){let viejo=null;try{viejo=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+  if(!viejo||!Array.isArray(viejo.orders)||localStorage.getItem(KEY+'-migrado'))return false;
+  const marcar=()=>{try{localStorage.setItem(KEY+'-migrado',new Date().toISOString())}catch(e){}};
+  const ids=new Set(db.orders.map(o=>o.id)),gids=new Set(db.expenses.map(g=>g.id));
+  const nuevas=viejo.orders.filter(o=>!ids.has(o.id)),nuevosG=(viejo.expenses||[]).filter(g=>!gids.has(g.id));
+  if(!nuevas.length&&!nuevosG.length){marcar();return false}
   gate.hidden=true;
-  const si=await confirmar('¿Subir tus órdenes a la nube?',`En este navegador hay ${no} órdenes y ${ng} gastos guardados. ¿Quieres subirlos a la nube para tenerlos en cualquier equipo? La copia de este navegador no se borra.`,'Subir a la nube');
+  const si=await confirmar('¿Subir tus órdenes a la nube?',`En este navegador hay ${nuevas.length} órdenes y ${nuevosG.length} gastos que todavía no están en la nube. ¿Quieres subirlos para tenerlos en cualquier equipo?${db.orders.length?' Se suman a las '+db.orders.length+' órdenes que ya están en la nube.':''} La copia de este navegador no se borra.`,'Subir a la nube');
   if(!si)return false;
-  db=Object.assign(defaults(),viejo);db.settings=Object.assign(defaults().settings,viejo.settings);
-  try{localStorage.setItem(KEY+'-migrado',new Date().toISOString())}catch(e){}
-  return true}
+  if(vacia||!db.orders.length){db.settings=Object.assign(defaults().settings,viejo.settings||{});db.lastBackup=viejo.lastBackup||db.lastBackup}
+  const s=db.settings,nums=new Set(db.orders.map(o=>o.num));
+  s.siguiente=Math.max(+s.siguiente||1,+(viejo.settings&&viejo.settings.siguiente)||1);
+  nuevas.forEach(o=>{if(nums.has(o.num)){o.num=s.prefijo+'-'+String(s.siguiente++).padStart(4,'0')}nums.add(o.num);db.orders.push(o)});
+  db.expenses.push(...nuevosG);
+  marcar();return true}
 async function entrar(){esperando('Cargando tus órdenes…');
   try{
     const r=await sb.rpc('es_admin');if(r.error)throw r.error;
     if(!r.data){await sb.auth.signOut();return pantallaLogin('Esta cuenta no tiene permiso para ver las órdenes.')}
     const {vacia}=await cargar();
     listo=true;
-    if(vacia){await migrar();save()}
+    const subio=await migrar(vacia);if(vacia||subio)save()
   }catch(e){console.error(e);return pantallaLogin('No se pudieron cargar las órdenes. Revisa tu conexión e intenta de nuevo.')}
   gate.hidden=true;sideFoot();route();
   if(syncing){await syncing;if(estadoSync==='ok'&&db.orders.length)toast('Órdenes guardadas en la nube')}}
