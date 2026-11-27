@@ -713,6 +713,7 @@ async function entrar(){esperando('Cargando tus órdenes…');
   gate.hidden=true;sideFoot();route();
   if(syncing){await syncing;if(estadoSync==='ok'&&db.orders.length)toast('Órdenes guardadas en la nube')}}
 (async()=>{
+  if(!sb&&CFG.url&&CFG.key){gate.hidden=false;gbox.innerHTML=`${LOGO}<h1>No se pudo conectar</h1><p>No cargó la conexión con la nube. Revisa tu internet, desactiva el bloqueador de anuncios para esta página y recarga.</p><button class="btn btn-p" type="button" onclick="location.reload()" style="width:100%">Recargar</button>`;return}
   if(!sb){/* sin Supabase configurado: funciona como antes, guardando en este navegador */
     try{const r=localStorage.getItem(KEY);if(r){db=Object.assign(defaults(),JSON.parse(r));db.settings=Object.assign(defaults().settings,db.settings)}}catch(e){}
     listo=true;gate.hidden=true;sideFoot();route();return}
