@@ -83,6 +83,9 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px
 .nav-r{display:flex;align-items:center;gap:12px}
 .nav-r .btn{border-color:var(--blue-2);color:#e9efff;padding:10px 18px}
 .nav-r .btn:hover{background:var(--blue-2);color:var(--navy)}
+.menu a{white-space:nowrap}
+@media (min-width:901px){.menu a[href="#destacados"]{display:none}}
+@media (max-width:1100px) and (min-width:901px){.menu{gap:18px}}
 .burger{display:none}
 @media (max-width:900px){
   .nav-r .btn{display:none}
@@ -248,7 +251,7 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
 <nav>
   <div class="wrap">
     <a class="logo" href="#inicio"><img src="img/nexotik-logo.svg?v=2" alt="Nexotik. Tu tecnología, en buenas manos." width="349" height="92"></a>
-    <div class="menu" id="menu"><a class="on" href="#inicio">Inicio</a><a href="#destacados">Destacados</a><a href="#servicios">Servicios</a><a href="#proceso">Proceso</a><a href="#consejos">Consejos</a><a href="#contacto">Contacto</a></div>
+    <div class="menu" id="menu"><a class="on" href="#inicio">Inicio</a><a href="#destacados">Destacados</a><a href="#servicios">Servicios</a><a href="#proceso">Proceso</a><a href="#consejos">Consejos</a><a href="#contacto">Contacto</a><a href="seguimiento.html">Consulta tu orden</a></div>
     <div class="nav-r"><a class="btn" href="https://wa.me/573218757723" target="_blank" rel="noopener">Escríbenos</a><button class="burger" id="burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu"><i></i><i></i><i></i></button></div>
   </div>
 </nav>
@@ -360,6 +363,7 @@ dialog[open]{animation:dlg .45s cubic-bezier(.2,.9,.25,1)}
         <div><svg><use href="#i-wa"/></svg><span class="num" id="num">321 875 7723</span></div>
         <div style="padding-left:32px"><button class="copy" id="copy" type="button">Copiar número</button></div>
         <div style="color:var(--muted-d);font-size:.85rem;padding-left:32px">Atención por WhatsApp. Cuéntanos qué necesitas y te respondemos.</div>
+        <div style="padding-left:32px"><a class="copy" href="seguimiento.html">Consulta el estado de tu orden →</a></div>
       </div>
       <div>
         <div class="logo"><img src="img/nexotik-logo.svg?v=2" alt="Nexotik. Tu tecnología, en buenas manos." width="455" height="120"></div>
