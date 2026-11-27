@@ -14,8 +14,3 @@ Página web de Nexotik, servicio técnico: mantenimiento de computadores, Window
 
 Contacto por WhatsApp: 321 875 7723
 
-## Páginas
-
-- `index.html`: página principal.
-- `seguimiento.html`: el cliente consulta el estado de su orden con el número y el código (o con el QR de la orden impresa).
-- `ordenes.html`: panel privado de órdenes, cuentas y ajustes (requiere iniciar sesión).
