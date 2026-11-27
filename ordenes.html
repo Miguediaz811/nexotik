@@ -536,6 +536,8 @@ function qrSvg(t){try{const q=qrcode(0,'M');q.addData(t);q.make();return q.creat
 function cargarScript(src){return new Promise((ok,no)=>{if(document.querySelector(`script[src="${src}"]`))return ok();const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
 let generando=false;
 async function pdfOrden(o){if(generando)return;generando=true;toast('Generando PDF…');
+  /* la pestaña se abre ya, dentro del clic, para que el navegador no la bloquee */
+  let w=null;try{w=window.open('','_blank');if(w)w.document.write('<!doctype html><meta charset=utf-8><title>Generando orden…</title><body style="margin:0;display:grid;place-items:center;height:100vh;font-family:system-ui,sans-serif;color:#4b5e82;background:#f4f8ff">Generando la orden '+esc(o.num)+'…</body>')}catch(e){w=null}
   const hoja=document.createElement('div');hoja.className='pdf-page';hoja.innerHTML=$('#print').innerHTML;document.body.appendChild(hoja);
   hoja.querySelectorAll('img[src*="nexotik-logo-claro.svg"]').forEach(i=>i.src='img/nexotik-logo-claro.png');
   try{
@@ -552,8 +554,9 @@ async function pdfOrden(o){if(generando)return;generando=true;toast('Generando P
       if(pag)pdf.addPage();pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,pw,ph*h/altoPag);y+=altoPag;pag++}
     const nom=('Orden '+o.num+' - '+(o.cliente.nombre||'')).replace(/[\\/:*?"<>|]+/g,'').trim();
     pdf.setProperties({title:'Orden de servicio '+o.num});
-    pdf.save(nom+'.pdf');toast('PDF descargado: '+nom+'.pdf');
-  }catch(e){console.error(e);toast('No se pudo generar el PDF. Revisa tu conexión.')}
+    if(w&&!w.closed){const url=URL.createObjectURL(pdf.output('blob'));w.location.href=url;setTimeout(()=>URL.revokeObjectURL(url),10*60*1000);toast('Orden '+o.num+' abierta en el visor de PDF')}
+    else{pdf.save(nom+'.pdf');toast('PDF descargado: '+nom+'.pdf')}
+  }catch(e){console.error(e);if(w&&!w.closed)w.close();toast('No se pudo generar el PDF. Revisa tu conexión.')}
   finally{hoja.remove();generando=false}}
 function imprimir(id){const o=db.orders.find(x=>x.id===id);if(!o)return;if(!o.codigo){o.codigo=nuevoCodigo();save()}const st=db.settings;const t=total(o),p=pagado(o);const em=emisorDe(o);
   const marca=`<img src="img/nexotik-logo-claro.svg?v=2" alt="${esc(st.negocio||'Nexotik')}">`+(em.tipo==='persona'?`<div style="font-weight:600;font-size:10.5pt;margin-top:4px">${esc(em.nombre)}</div>`:'');
